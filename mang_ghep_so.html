@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MẢNG GHÉP SỐ - Hệ Thống Hội Thi Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        :root {
+            --primary-red: #da251d;
+            --gold: #f59e0b;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #fdfdfd;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        .perspective { perspective: 1200px; }
+
+        .card-3d {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            background: white;
+            border: 2px solid #f1f5f9;
+        }
+
+        .card-3d:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(218, 37, 29, 0.1);
+            border-color: var(--primary-red);
+        }
+
+        .card-3d.selected {
+            transform: scale(1.05) translateZ(20px);
+            border: 3px solid var(--primary-red);
+            background: #fffafa;
+        }
+
+        .card-3d.matched {
+            animation: match-animation 0.5s forwards;
+        }
+
+        @keyframes match-animation {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); background: var(--gold); color: white; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .spinning {
+            animation: quick-spin 0.15s linear infinite;
+        }
+
+        @keyframes quick-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--primary-red), #991b1b);
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .btn-main:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(218, 37, 29, 0.3);
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <!-- Header -->
+    <nav class="sticky top-0 z-40 bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-red-600 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-yellow-400">
+                        <path d="M12,2L14.39,8.26L21,9.27L16.27,13.91L17.38,20.5L12,17.38L6.62,20.5L7.73,13.91L3,9.27L9.61,8.26L12,2Z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-800 text-slate-800 tracking-tighter leading-none italic">MẢNG GHÉP <span class="text-red-600">SỐ</span></h1>
+                    <p id="nav-info" class="text-[10px] font-bold text-slate-400 tracking-widest mt-1 uppercase">SBD Thí Sinh: Đang chờ</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="flex gap-6 bg-red-50 px-6 py-2 rounded-2xl border border-red-100">
+                    <div class="text-center">
+                        <p class="text-[9px] uppercase font-extrabold text-red-400">Thời gian còn lại</p>
+                        <p id="timer" class="text-lg font-mono font-bold text-red-700">03:00</p>
+                    </div>
+                    <div class="w-px bg-red-200 h-8"></div>
+                    <div class="text-center">
+                        <p class="text-[9px] uppercase font-extrabold text-red-400">Điểm (Tối đa 10)</p>
+                        <p id="score" class="text-lg font-mono font-bold text-amber-600">0.00</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="toggleHelp()" class="p-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition-all shadow-sm text-blue-600" title="Hướng dẫn">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </button>
+                    <button onclick="toggleLeaderboard()" class="p-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    </button>
+                    <button onclick="toggleSettings()" class="p-3 bg-slate-800 rounded-xl text-white shadow-lg hover:bg-slate-900 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="max-w-7xl mx-auto p-6 flex flex-col items-center justify-center min-h-[70vh]">
+        <div id="setup-screen" class="w-full max-w-lg bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-100 flex flex-col items-center">
+            <div id="wheel-outer" class="relative w-72 h-72 mb-10 flex items-center justify-center">
+                <div class="absolute inset-0 border-[12px] border-dashed border-red-50 rounded-full"></div>
+                <div id="wheel-card" class="w-full h-full bg-gradient-to-br from-red-600 to-amber-500 rounded-full flex flex-col items-center justify-center shadow-2xl border-8 border-white text-white transition-transform">
+                    <span class="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">Số Báo Danh</span>
+                    <span id="lucky-sbd" class="text-7xl font-800 tracking-tighter">?</span>
+                </div>
+                <div class="absolute -top-4 w-8 h-12 bg-white shadow-xl rounded-full border-2 border-red-50 flex items-center justify-center z-20">
+                    <div class="w-2 h-5 bg-red-600 rounded-full"></div>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-800 text-slate-800 mb-2">QUAY SỐ DỰ THI</h2>
+            <p class="text-slate-400 text-sm text-center mb-10">Bấm nút để chọn ngẫu nhiên thí sinh bước vào vòng thi "Mảng Ghép Số".</p>
+
+            <button id="spin-btn" onclick="startLuckySpin()" class="w-full py-5 btn-main rounded-3xl text-2xl font-bold shadow-xl shadow-red-100">BẮT ĐẦU QUAY</button>
+        </div>
+
+        <div id="game-arena" class="hidden w-full grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 perspective opacity-0 transition-all duration-700">
+            <!-- Cards -->
+        </div>
+    </main>
+
+    <!-- Modal: Hướng dẫn -->
+    <div id="help-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
+            <h3 class="text-2xl font-800 text-red-600 mb-6 text-center italic">HƯỚNG DẪN THI ĐẤU</h3>
+            <div class="space-y-4 text-slate-700">
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold flex-shrink-0">1</div>
+                    <p><b>Chuẩn bị:</b> Ban tổ chức nạp dữ liệu câu hỏi và số lượng thí sinh trong phần <b>Cấu hình</b>.</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold flex-shrink-0">2</div>
+                    <p><b>Quay số:</b> Nhấn nút Quay để chọn ngẫu nhiên <b>Số báo danh (SBD)</b> dự thi.</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold flex-shrink-0">3</div>
+                    <p><b>Thi đấu:</b> Ghép đôi các ô có nội dung tương ứng trong thời gian tối đa <b>3 phút</b>.</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold flex-shrink-0">4</div>
+                    <p><b>Tính điểm:</b> Điểm (Tối đa 10) = 5đ [Số cặp đúng] + 5đ [Thời gian còn dư].</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold flex-shrink-0">5</div>
+                    <p><b>Báo cáo:</b> Kết quả lưu tự động vào bảng điểm, có thể <b>Xuất Excel</b> để tổng kết.</p>
+                </div>
+            </div>
+            <button onclick="toggleHelp()" class="w-full mt-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200">ĐÃ HIỂU</button>
+        </div>
+    </div>
+
+    <!-- Modal: Settings -->
+    <div id="settings-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-3xl p-8 shadow-2xl">
+            <h3 class="text-xl font-800 text-slate-800 mb-6 uppercase tracking-tight">Cấu hình hội thi</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Số lượng thí sinh</label>
+                    <input type="number" id="input-total-contestants" value="50" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-red-500 font-bold text-red-600">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Nạp từ File Excel</label>
+                    <input type="file" id="file-picker" accept=".xlsx, .xls" class="hidden" onchange="importExcel(event)">
+                    <label for="file-picker" class="flex items-center justify-center w-full p-4 border-2 border-dashed border-red-200 rounded-2xl bg-red-50 text-red-600 font-bold cursor-pointer hover:bg-red-100 transition-all">
+                        CHỌN FILE .XLSX
+                    </label>
+                </div>
+            </div>
+            <div class="space-y-2 mb-8">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Dữ liệu mảng ghép (Cột A - Cột B)</label>
+                <textarea id="data-editor" class="w-full h-40 bg-slate-50 border border-slate-200 rounded-2xl p-4 font-mono text-xs focus:ring-2 focus:ring-red-500 outline-none" placeholder="Nội dung 1 [TAB] Nội dung 2..."></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="saveSettings()" class="flex-1 py-4 btn-main rounded-2xl font-bold">CẬP NHẬT DỮ LIỆU</button>
+                <button onclick="toggleSettings()" class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200">ĐÓNG</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Bảng Điểm -->
+    <div id="leaderboard-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] p-10 shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-2xl font-800 text-slate-800 tracking-tight italic">KẾT QUẢ <span class="text-red-600">HỘI THI</span></h3>
+                <div class="flex gap-3">
+                    <button onclick="exportExcel()" class="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-700 shadow-lg shadow-emerald-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        TẢI BÁO CÁO
+                    </button>
+                    <button onclick="resetData()" class="px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-bold hover:bg-red-100">XOÁ HẾT</button>
+                    <button onclick="toggleLeaderboard()" class="text-slate-400 hover:text-red-600 text-3xl ml-2">✕</button>
+                </div>
+            </div>
+            <div class="overflow-y-auto flex-1 rounded-3xl border border-slate-100 shadow-inner bg-slate-50/50">
+                <table class="w-full text-left text-sm">
+                    <thead class="sticky top-0 bg-red-600 text-white font-bold uppercase text-[10px] tracking-widest">
+                        <tr>
+                            <th class="p-6">SBD</th>
+                            <th class="p-6">Thứ hạng</th>
+                            <th class="p-6">Thời điểm thi</th>
+                            <th class="p-6">Thời gian làm</th>
+                            <th class="p-6">Điểm Tổng (10)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100"></tbody>
+                </table>
+                <div id="empty-state" class="p-20 text-center text-slate-400 font-medium italic hidden">Chưa có dữ liệu thí sinh dự thi.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-msg" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-10 py-5 rounded-3xl shadow-2xl opacity-0 transition-all pointer-events-none text-center font-bold">
+        Thông báo
+    </div>
+
+    <script>
+        const defaultData = `Tập trung dân chủ\tNguyên tắc tổ chức cơ bản của Đảng
+Tự phê bình\tQuy luật phát triển thường xuyên
+Đoàn kết thống nhất\tSinh mệnh của Đảng ta
+Dân là gốc\tBản chất Đảng cầm quyền
+Kỷ luật nghiêm minh\tSức mạnh vô địch của Đảng
+Đổi mới sáng tạo\tĐộng lực phát triển bền vững
+Chống tham nhũng\tNhiệm vụ cấp bách, trọng tâm
+Dân vận khéo\tGắn bó mật thiết với nhân dân
+Bảo vệ Đảng\tNhiệm vụ sống còn của cách mạng
+Nêu gương\tTrách nhiệm của mọi đảng viên`;
+
+        let questionPool = [];
+        let currentPairs = [];
+        let cards = [];
+        let selections = [];
+        let activeSBD = null;
+        let secondsPassed = 0;
+        let timeLimit = 180;
+        let timerTicker;
+        let matchedCount = 0;
+        let historyData = JSON.parse(localStorage.getItem('mang_ghep_so_scores_v2') || '[]');
+
+        const arena = document.getElementById('game-arena');
+        const sbdDisplay = document.getElementById('lucky-sbd');
+        const timerEl = document.getElementById('timer');
+        const scoreEl = document.getElementById('score');
+        const editor = document.getElementById('data-editor');
+
+        window.onload = () => {
+            if (!editor.value) editor.value = defaultData;
+            refreshQuestionPool();
+            renderTable();
+        };
+
+        function refreshQuestionPool() {
+            const raw = editor.value.trim();
+            if (!raw) return;
+            questionPool = raw.split('\n').map(l => {
+                const p = l.split(/\t|,| {2,}/);
+                return p.length >= 2 ? { a: p[0].trim(), b: p[1].trim() } : null;
+            }).filter(x => x);
+        }
+
+        function importExcel(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+                editor.value = rows.filter(r => r[0] && r[1]).map(r => `${r[0]}\t${r[1]}`).join('\n');
+                refreshQuestionPool();
+                notify("Đã nạp câu hỏi từ Excel!");
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function startLuckySpin() {
+            const maxVal = parseInt(document.getElementById('input-total-contestants').value) || 50;
+            const btn = document.getElementById('spin-btn');
+            const wheel = document.getElementById('wheel-card');
+            btn.disabled = true;
+            wheel.classList.add('spinning');
+            const spinTime = 2500;
+            const interval = setInterval(() => {
+                sbdDisplay.innerText = Math.floor(Math.random() * maxVal) + 1;
+            }, 60);
+            setTimeout(() => {
+                clearInterval(interval);
+                activeSBD = Math.floor(Math.random() * maxVal) + 1;
+                sbdDisplay.innerText = activeSBD;
+                wheel.classList.remove('spinning');
+                document.getElementById('nav-info').innerText = `SBD Thí Sinh: ${activeSBD.toString().padStart(3, '0')}`;
+                notify(`Chuẩn bị thi: Thí sinh SBD ${activeSBD}`);
+                setTimeout(prepareArena, 1200);
+            }, spinTime);
+        }
+
+        function prepareArena() {
+            if (questionPool.length < 5) {
+                notify("Cần ít nhất 5 cặp câu hỏi!");
+                document.getElementById('spin-btn').disabled = false;
+                return;
+            }
+            document.getElementById('setup-screen').classList.add('hidden');
+            arena.classList.remove('hidden');
+            setTimeout(() => arena.classList.remove('opacity-0'), 50);
+            secondsPassed = 0; matchedCount = 0; selections = [];
+            const shuffled = [...questionPool].sort(() => 0.5 - Math.random());
+            currentPairs = shuffled.slice(0, 10);
+            cards = [];
+            currentPairs.forEach((p, i) => {
+                cards.push({ id: i, text: p.a });
+                cards.push({ id: i, text: p.b });
+            });
+            cards.sort(() => 0.5 - Math.random());
+            renderCards();
+            startTimer();
+        }
+
+        function renderCards() {
+            arena.innerHTML = '';
+            cards.forEach(card => {
+                const el = document.createElement('div');
+                el.className = 'card-3d rounded-3xl p-6 min-h-[150px] flex items-center justify-center text-center cursor-pointer font-bold shadow-sm text-slate-800 border-2 border-slate-100 text-sm md:text-base leading-tight bg-white';
+                el.innerText = card.text;
+                el.dataset.pairId = card.id;
+                el.onclick = () => onCardClick(el);
+                arena.appendChild(el);
+            });
+        }
+
+        function onCardClick(el) {
+            if (el.classList.contains('matched') || el.classList.contains('selected') || selections.length >= 2) return;
+            el.classList.add('selected');
+            selections.push(el);
+            if (selections.length === 2) checkMatch();
+        }
+
+        function checkMatch() {
+            const [c1, c2] = selections;
+            if (c1.dataset.pairId === c2.dataset.pairId) {
+                setTimeout(() => {
+                    c1.classList.replace('selected', 'matched');
+                    c2.classList.replace('selected', 'matched');
+                    matchedCount++;
+                    selections = [];
+                    calculateLiveScore();
+                    if (matchedCount === currentPairs.length) finishGame();
+                }, 300);
+            } else {
+                setTimeout(() => {
+                    c1.classList.add('border-red-500', 'bg-red-50');
+                    c2.classList.add('border-red-500', 'bg-red-50');
+                    setTimeout(() => {
+                        c1.classList.remove('selected', 'border-red-500', 'bg-red-50');
+                        c2.classList.remove('selected', 'border-red-500', 'bg-red-50');
+                        selections = [];
+                    }, 400);
+                }, 300);
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerTicker);
+            timerTicker = setInterval(() => {
+                secondsPassed++;
+                const remaining = Math.max(0, timeLimit - secondsPassed);
+                timerEl.innerText = `${Math.floor(remaining / 60).toString().padStart(2, '0')}:${(remaining % 60).toString().padStart(2, '0')}`;
+                calculateLiveScore();
+                if (secondsPassed >= timeLimit) finishGame(true);
+            }, 1000);
+        }
+
+        function calculateLiveScore() {
+            const matchPoints = (matchedCount / currentPairs.length) * 5;
+            const timePoints = Math.max(0, 5 * (1 - (secondsPassed / timeLimit)));
+            const total = (matchPoints + timePoints).toFixed(2);
+            scoreEl.innerText = total;
+            return total;
+        }
+
+        function finishGame(isTimeUp = false) {
+            clearInterval(timerTicker);
+            const finalScore = calculateLiveScore();
+            const record = {
+                sbd: activeSBD,
+                date: new Date().toLocaleString('vi-VN'),
+                rawTime: secondsPassed,
+                timeLabel: `${Math.floor(secondsPassed/60)}p ${secondsPassed%60}s`,
+                score: parseFloat(finalScore)
+            };
+            historyData.unshift(record);
+            localStorage.setItem('mang_ghep_so_scores_v2', JSON.stringify(historyData));
+            renderTable();
+            setTimeout(() => {
+                notify(isTimeUp ? `HẾT GIỜ! SBD ${activeSBD} đạt ${finalScore} điểm.` : `XUẤT SẮC! SBD ${activeSBD} đã hoàn thành với ${finalScore} điểm.`);
+                backToStart();
+            }, 800);
+        }
+
+        function backToStart() {
+            arena.classList.add('opacity-0');
+            setTimeout(() => {
+                arena.classList.add('hidden');
+                document.getElementById('setup-screen').classList.remove('hidden');
+                document.getElementById('spin-btn').disabled = false;
+                sbdDisplay.innerText = "?"; timerEl.innerText = "03:00"; scoreEl.innerText = "0.00";
+                document.getElementById('nav-info').innerText = "SBD Thí Sinh: Đang chờ";
+            }, 600);
+        }
+
+        function toggleHelp() {
+            const m = document.getElementById('help-modal');
+            m.classList.toggle('hidden'); m.classList.toggle('flex');
+        }
+
+        function toggleSettings() {
+            const m = document.getElementById('settings-modal');
+            m.classList.toggle('hidden'); m.classList.toggle('flex');
+        }
+
+        function saveSettings() {
+            refreshQuestionPool(); toggleSettings(); backToStart(); notify("Dữ liệu đã được cập nhật!");
+        }
+
+        function toggleLeaderboard() {
+            const m = document.getElementById('leaderboard-modal');
+            m.classList.toggle('hidden'); m.classList.toggle('flex');
+            if (!m.classList.contains('hidden')) renderTable();
+        }
+
+        function renderTable() {
+            const body = document.getElementById('table-body');
+            const empty = document.getElementById('empty-state');
+            const sorted = [...historyData].sort((a, b) => b.score - a.score || a.rawTime - b.rawTime);
+            if (sorted.length === 0) { empty.classList.remove('hidden'); body.innerHTML = ''; return; }
+            empty.classList.add('hidden');
+            body.innerHTML = sorted.map((h, i) => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-6 font-extrabold text-red-600 text-lg">${h.sbd}</td>
+                    <td class="p-6 font-bold text-slate-300">#${i + 1}</td>
+                    <td class="p-6 text-slate-500 text-xs">${h.date}</td>
+                    <td class="p-6 font-mono text-slate-600">${h.timeLabel}</td>
+                    <td class="p-6 font-extrabold text-amber-600 text-xl">${h.score.toFixed(2)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function resetData() {
+            if (confirm("Xoá toàn bộ lịch sử thi đấu?")) {
+                historyData = []; localStorage.removeItem('mang_ghep_so_scores_v2'); renderTable(); notify("Bảng điểm đã được làm mới!");
+            }
+        }
+
+        function notify(m) {
+            const t = document.getElementById('toast-msg');
+            t.innerText = m; t.classList.replace('opacity-0', 'opacity-100');
+            setTimeout(() => t.classList.replace('opacity-100', 'opacity-0'), 3000);
+        }
+
+        function exportExcel() {
+            if (historyData.length === 0) return notify("Không có dữ liệu!");
+            const exportData = historyData.map(h => ({
+                "SBD": h.sbd, "Thời gian thi": h.date, "Thời gian hoàn thành": h.timeLabel, "Điểm Tổng (Hệ 10)": h.score
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Bang_Diem");
+            XLSX.writeFile(wb, `Bao_Cao_Mang_Ghep_So_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+    </script>
+</body>
+</html>

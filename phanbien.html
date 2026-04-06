@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Thí Nghiệm Tranh Biện Số</title>
+    <!-- Tích hợp Tailwind CSS qua CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tích hợp Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Định nghĩa hiệu ứng sóng âm thanh mượt mà */
+        .audio-bar {
+            transition: all 0.1s ease-in-out;
+            height: 4px;
+        }
+        .speaking .bar-1 { height: 100%; animation: pulse 1s infinite; }
+        .speaking .bar-2 { height: 75%; animation: pulse 1s infinite 0.1s; }
+        .speaking .bar-3 { height: 80%; animation: pulse 1s infinite 0.2s; }
+        .speaking .bar-4 { height: 50%; animation: pulse 1s infinite 0.3s; }
+        .speaking .bar-5 { height: 100%; animation: pulse 1s infinite 0.15s; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 font-sans text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-red-800 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight uppercase">Phòng Thí Nghiệm Tranh Biện Số</h1>
+                <p class="text-red-200 text-sm mt-1">Chuyên đề: Bảo vệ nền tảng tư tưởng - Bác bỏ quan điểm sai trái</p>
+            </div>
+            <div class="flex items-center space-x-2 bg-red-900 px-4 py-2 rounded-lg border border-red-700">
+                <i data-lucide="shield-alert" class="text-yellow-400 w-5 h-5"></i>
+                <span class="font-semibold text-yellow-400">Chế độ Mô phỏng</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-6">
+        
+        <!-- Left Sidebar - AI Characters -->
+        <div class="w-full md:w-1/3 flex flex-col gap-4">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold flex items-center gap-2 text-gray-700">
+                        <i data-lucide="bot" class="w-5 h-5"></i>
+                        Quân xanh (AI Phản biện)
+                    </h2>
+                </div>
+                <div id="char-list" class="p-2 space-y-2">
+                    <!-- Nút nhân vật sẽ được render qua Javascript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Content - Active Debate Area -->
+        <div class="w-full md:w-2/3 flex flex-col gap-6">
+            
+            <!-- AI Attack Box -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative">
+                <!-- Decorative top border -->
+                <div class="h-1 w-full bg-blue-600"></div>
+                
+                <div class="p-6">
+                    <div class="flex flex-col xl:flex-row gap-6">
+                        
+                        <!-- VIDEO FRAME SIMULATION -->
+                        <div class="relative w-full xl:w-72 h-48 bg-gray-900 rounded-xl overflow-hidden shadow-md flex-shrink-0 border-4 border-gray-800">
+                            <img id="main-avatar" src="" alt="Avatar" class="w-full h-full object-cover transition-transform duration-1000 origin-top scale-100 grayscale-[20%]" />
+                            
+                            <!-- LIVE Overlay -->
+                            <div id="live-indicator" class="hidden absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1.5 shadow-sm">
+                                <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> 
+                                TRỰC TIẾP
+                            </div>
+                            
+                            <!-- Name Plate -->
+                            <div id="video-name-plate" class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-sm font-medium px-2 py-1 rounded">
+                                Tên nhân vật
+                            </div>
+                            
+                            <!-- Audio Visualizer (Sóng âm) -->
+                            <div id="audio-visualizer" class="absolute bottom-3 right-3 flex items-end gap-[3px] h-6">
+                                <div class="audio-bar bar-1 w-1.5 bg-green-400 rounded-t-sm"></div>
+                                <div class="audio-bar bar-2 w-1.5 bg-green-400 rounded-t-sm"></div>
+                                <div class="audio-bar bar-3 w-1.5 bg-green-400 rounded-t-sm"></div>
+                                <div class="audio-bar bar-4 w-1.5 bg-green-400 rounded-t-sm"></div>
+                                <div class="audio-bar bar-5 w-1.5 bg-green-400 rounded-t-sm"></div>
+                            </div>
+                        </div>
+
+                        <!-- CONTENT AREA -->
+                        <div class="flex-1 flex flex-col justify-center">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h2 id="char-name" class="text-2xl font-bold text-gray-800">Tên nhân vật</h2>
+                                    <span id="char-role-topic" class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded mt-1">
+                                        Vai trò • Chủ đề
+                                    </span>
+                                </div>
+                                
+                                <button id="speak-btn" onclick="toggleSpeech()" class="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition bg-blue-600 hover:bg-blue-700 text-white shadow-sm" title="Đọc lại câu hỏi">
+                                    <i data-lucide="volume-2" class="w-5 h-5"></i>
+                                    <span id="speak-text">Phát biểu</span>
+                                </button>
+                            </div>
+
+                            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-blue-500 relative">
+                                <i data-lucide="message-square" class="text-blue-200 absolute top-4 left-4 w-6 h-6 opacity-50"></i>
+                                <p id="char-quote" class="text-lg text-gray-700 leading-relaxed italic pl-6">
+                                    "Nội dung câu hỏi..."
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Response Area -->
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold flex items-center gap-2 text-red-800">
+                        <i data-lucide="award" class="w-5 h-5"></i>
+                        Không gian Chuẩn bị (Đội Sao Vàng / Búa Liềm)
+                    </h2>
+                    
+                    <!-- Timer Controls -->
+                    <div class="flex items-center gap-3">
+                        <div id="timer-display" class="flex items-center gap-2 font-mono text-xl font-bold px-3 py-1 rounded-md bg-gray-100 text-gray-800">
+                            <i data-lucide="clock" class="w-5 h-5"></i>
+                            <span id="time-text">03:00</span>
+                        </div>
+                        <button onclick="toggleTimer()" class="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition" title="Bắt đầu/Tạm dừng">
+                            <i id="play-pause-icon" data-lucide="play" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="resetTimer()" class="p-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition" title="Đặt lại thời gian">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6 flex flex-col gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Dàn ý phản biện nhanh (Key points):
+                        </label>
+                        <textarea id="student-notes" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition" placeholder="1. Thừa nhận khách quan...&#10;2. Phân tích bản chất sự việc...&#10;3. Đưa ra minh chứng thực tiễn..."></textarea>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <span id="hint-text" class="text-sm text-gray-500">
+                            Gợi ý: Áp dụng phương pháp 3 bước để phản biện.
+                        </span>
+                        <button class="px-6 py-2 bg-red-700 hover:bg-red-800 text-white font-semibold rounded-lg transition shadow-sm flex items-center gap-2">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                            Mời Sinh viên Trình bày
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Kịch bản logic Javascript -->
+    <script>
+        // Dữ liệu kịch bản các nhân vật AI
+        const aiCharacters = [
+            {
+                id: 'hoaibao',
+                name: 'Hoài Bảo',
+                role: 'Đội Thanh niên (AI)',
+                topic: 'Kinh tế & Toàn cầu hóa',
+                avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+                quote: "Nhiều quốc gia đã chuyển sang nền kinh tế thị trường tự do và thành công. Chẳng hạn, các quốc gia như Mỹ, Anh, và nhiều nước EU... CNXH, theo đó, không còn là mô hình lý tưởng trong thời đại toàn cầu hóa. Hay nói cách khác, CNXH không mang lại thành công về kinh tế, gây trì trệ, nghèo đói."
+            },
+            {
+                id: 'thaotam',
+                name: 'Thảo Tâm',
+                role: 'Đội Thanh niên (AI)',
+                topic: 'Quyền lực & Tham nhũng',
+                avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+                quote: "Những quốc gia theo chủ nghĩa xã hội cho thấy việc tập trung quyền lực vào một nhóm người có thể dẫn đến tham nhũng và chính quyền độc đoán, ảnh hưởng đến quyền tự do, dân chủ. Những vụ án điển hình như: Việt Á, chuyến bay giải cứu, Trương Mỹ Lan,… Các đồng chí lý giải điều này thế nào?"
+            },
+            {
+                id: 'dangkhoa',
+                name: 'Đăng Khoa',
+                role: 'Đội Thanh niên (AI)',
+                topic: 'Giám sát xã hội & Động lực',
+                avatar: 'https://randomuser.me/api/portraits/men/46.jpg',
+                quote: "Quá trình giám sát, phản biện xã hội chỉ mang tính hình thức. Chủ nghĩa xã hội vẫn không khuyến khích tự do cá nhân, quyền sở hữu tư nhân, điều này có thể làm giảm động lực cá nhân trong việc đóng góp cho sự phát triển của xã hội."
+            },
+            {
+                id: 'quangbinh',
+                name: 'Quang Bình',
+                role: 'Đội Thanh niên (AI)',
+                topic: 'Thị trường & Linh hoạt',
+                avatar: 'https://randomuser.me/api/portraits/men/22.jpg',
+                quote: "Các quốc gia theo chủ nghĩa xã hội thường tập trung vào kế hoạch hóa tập trung và kiểm soát nền kinh tế. Điều này khiến cho thị trường không linh hoạt và không khuyến khích sự sáng tạo, ví dụ như trong trường hợp Liên Xô trước đây."
+            },
+            {
+                id: 'tuongvi',
+                name: 'Tường Vi',
+                role: 'Đội Thanh niên (AI)',
+                topic: 'Sáng tạo & Đổi mới',
+                avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
+                quote: "Cùng với đó, theo em cảm nhận Đội Búa Liềm và Đội Sao Vàng vẫn chưa làm sáng rõ trong việc phản bác quan điểm cho rằng con người trong chế độ XHCN bị kiềm hãm, không thể đổi mới, sáng tạo."
+            },
+            {
+                id: 'tuanquang',
+                name: 'Tuấn Quang',
+                role: 'Đội Thanh niên (AI)',
+                topic: 'Hợp tác quốc tế',
+                avatar: 'https://randomuser.me/api/portraits/men/11.jpg',
+                quote: "Chủ nghĩa xã hội có thể dẫn đến tình trạng cô lập quốc tế, vì các chính sách bảo vệ nền kinh tế nội địa làm giảm khả năng giao thương. Các bạn nghĩ sao về điều này? Đề nghị minh chứng rõ hơn về quá trình hợp tác quốc tế của Việt Nam?"
+            }
+        ];
+
+        // Biến trạng thái toàn cục
+        let activeChar = aiCharacters[0];
+        let timerRunning = false;
+        let timeLeft = 180; // 3 phút
+        let timerInterval = null;
+        let isSpeaking = false;
+
+        // --- Render Sidebar ---
+        function renderCharacterList() {
+            const listContainer = document.getElementById('char-list');
+            listContainer.innerHTML = '';
+            
+            aiCharacters.forEach(char => {
+                const isActive = activeChar.id === char.id;
+                const button = document.createElement('button');
+                button.className = `w-full text-left px-4 py-3 rounded-lg flex items-center justify-between transition-all ${
+                    isActive ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-gray-100 text-gray-700'
+                }`;
+                button.onclick = () => selectCharacter(char);
+                
+                button.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="p-1 rounded-full ${isActive ? 'bg-blue-400' : 'bg-gray-200'}">
+                            <img src="${char.avatar}" alt="${char.name}" class="w-10 h-10 rounded-full object-cover border-2 border-white" />
+                        </div>
+                        <div>
+                            <div class="font-bold">${char.name}</div>
+                            <div class="text-xs ${isActive ? 'text-blue-100' : 'text-gray-500'}">${char.topic}</div>
+                        </div>
+                    </div>
+                    ${isActive ? '<i data-lucide="chevron-right" class="w-5 h-5"></i>' : ''}
+                `;
+                listContainer.appendChild(button);
+            });
+            lucide.createIcons();
+        }
+
+        // --- Select Character ---
+        function selectCharacter(char) {
+            activeChar = char;
+            renderCharacterList();
+            updateMainUI();
+            resetTimer();
+            document.getElementById('student-notes').value = ''; // Xóa ghi chú cũ
+            speakCurrentQuote(); // Tự động đọc câu hỏi mới
+        }
+
+        // --- Update Main UI ---
+        function updateMainUI() {
+            document.getElementById('main-avatar').src = activeChar.avatar;
+            document.getElementById('video-name-plate').innerText = activeChar.name;
+            document.getElementById('char-name').innerText = activeChar.name;
+            document.getElementById('char-role-topic').innerText = `${activeChar.role} • ${activeChar.topic}`;
+            document.getElementById('char-quote').innerText = `"${activeChar.quote}"`;
+            document.getElementById('hint-text').innerText = `Gợi ý: Áp dụng phương pháp 3 bước để phản biện lập luận của ${activeChar.name}.`;
+        }
+
+        // --- Text-to-Speech ---
+        function setSpeakingState(speaking) {
+            isSpeaking = speaking;
+            
+            // Xử lý giao diện Video/Avatar
+            const avatar = document.getElementById('main-avatar');
+            const liveIndicator = document.getElementById('live-indicator');
+            const visualizer = document.getElementById('audio-visualizer');
+            
+            if (speaking) {
+                avatar.classList.replace('scale-100', 'scale-110');
+                avatar.classList.replace('grayscale-[20%]', 'grayscale-0');
+                liveIndicator.classList.remove('hidden');
+                visualizer.classList.add('speaking');
+            } else {
+                avatar.classList.replace('scale-110', 'scale-100');
+                avatar.classList.replace('grayscale-0', 'grayscale-[20%]');
+                liveIndicator.classList.add('hidden');
+                visualizer.classList.remove('speaking');
+            }
+
+            // Xử lý giao diện nút Phát biểu
+            const speakBtn = document.getElementById('speak-btn');
+            const speakText = document.getElementById('speak-text');
+            
+            if (speaking) {
+                speakBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'text-white');
+                speakBtn.classList.add('bg-red-50', 'text-red-700', 'animate-pulse', 'border', 'border-red-200', 'shadow-inner');
+                speakText.innerText = 'Đang phát...';
+            } else {
+                speakBtn.classList.remove('bg-red-50', 'text-red-700', 'animate-pulse', 'border', 'border-red-200', 'shadow-inner');
+                speakBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'text-white');
+                speakText.innerText = 'Phát biểu';
+            }
+        }
+
+        function speakCurrentQuote() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(activeChar.quote);
+                utterance.lang = 'vi-VN';
+                utterance.rate = 1.0;
+                
+                utterance.onstart = () => setSpeakingState(true);
+                utterance.onend = () => setSpeakingState(false);
+                utterance.onerror = () => setSpeakingState(false);
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Trình duyệt của bạn không hỗ trợ tính năng đọc văn bản.");
+            }
+        }
+
+        function toggleSpeech() {
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+                setSpeakingState(false);
+            } else {
+                speakCurrentQuote();
+            }
+        }
+
+        // --- Timer Logic ---
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('time-text').innerText = formatTime(timeLeft);
+            
+            const timerContainer = document.getElementById('timer-display');
+            if (timeLeft <= 30 && timeLeft > 0) {
+                timerContainer.classList.remove('bg-gray-100', 'text-gray-800');
+                timerContainer.classList.add('bg-red-100', 'text-red-600', 'animate-pulse');
+            } else {
+                timerContainer.classList.add('bg-gray-100', 'text-gray-800');
+                timerContainer.classList.remove('bg-red-100', 'text-red-600', 'animate-pulse');
+            }
+        }
+
+        function toggleTimer() {
+            timerRunning = !timerRunning;
+            const playPauseIconContainer = document.getElementById('play-pause-icon').parentNode;
+            
+            if (timerRunning) {
+                playPauseIconContainer.innerHTML = '<i data-lucide="pause" class="w-4 h-4"></i>';
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        timerRunning = false;
+                        playPauseIconContainer.innerHTML = '<i data-lucide="play" class="w-4 h-4"></i>';
+                    }
+                }, 1000);
+            } else {
+                clearInterval(timerInterval);
+                playPauseIconContainer.innerHTML = '<i data-lucide="play" class="w-4 h-4"></i>';
+            }
+            lucide.createIcons();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            timeLeft = 180;
+            updateTimerDisplay();
+            
+            const playPauseIconContainer = document.getElementById('play-pause-icon').parentNode;
+            if(!document.getElementById('play-pause-icon')) {
+                 playPauseIconContainer.innerHTML = '<i id="play-pause-icon" data-lucide="play" class="w-4 h-4"></i>';
+            }
+            lucide.createIcons();
+        }
+
+        // --- Khởi tạo khi load trang ---
+        window.onload = () => {
+            renderCharacterList();
+            updateMainUI();
+            updateTimerDisplay();
+            lucide.createIcons();
+        };
+
+        // Dừng âm thanh khi đóng tab
+        window.onbeforeunload = () => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        };
+    </script>
+</body>
+</html>

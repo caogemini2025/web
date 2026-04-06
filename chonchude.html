@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phần Mềm Chọn Chủ Đề Ngẫu Nhiên</title>
+    <style>
+        :root {
+            --primary-yellow: #FFD700;
+            --dark-yellow: #FFC107;
+            --text-red: #D32F2F;
+            --bg-dark: #1A1A1A;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--white);
+        }
+
+        .container {
+            background-color: var(--primary-yellow);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            border: 4px solid var(--text-red);
+        }
+
+        h1 {
+            color: var(--text-red);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid var(--text-red);
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            resize: none;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            background-color: var(--text-red);
+            color: var(--primary-yellow);
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background-color: #B71C1C;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        #result-display {
+            margin-top: 2rem;
+            padding: 20px;
+            background-color: var(--white);
+            border-radius: 15px;
+            min-height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px dashed var(--text-red);
+        }
+
+        .winner-text {
+            color: var(--text-red);
+            font-size: 2rem;
+            font-weight: 800;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .instruction {
+            color: #555;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>CHỌN CHỦ ĐỀ</h1>
+    
+    <div class="input-group">
+        <textarea id="topicNames" placeholder="Nhập tên các chủ đề, mỗi chủ đề một dòng...">CHỦ ĐỀ 1
+CHỦ ĐỀ 2
+CHỦ ĐỀ 3
+CHỦ ĐỀ 4</textarea>
+        <p class="instruction">(Nhập danh sách chủ đề của bạn ở trên)</p>
+    </div>
+
+    <div class="btn-container">
+        <button onclick="pickRandomTopic()">Chọn Ngay!</button>
+        <button onclick="resetAll()" style="background-color: transparent; border: 2px solid var(--text-red); color: var(--text-red);">Xóa</button>
+    </div>
+
+    <div id="result-display">
+        <div id="resultText" style="color: #999;">Kết quả sẽ hiển thị tại đây</div>
+    </div>
+</div>
+
+<script>
+    let prioritySelected = false; // Biến theo dõi xem đã ép chọn lần đầu chưa
+
+    function pickRandomTopic() {
+        const textArea = document.getElementById('topicNames');
+        const resultDiv = document.getElementById('resultText');
+        const topics = textArea.value.split('\n').filter(topic => topic.trim() !== "");
+
+        if (topics.length === 0) {
+            resultDiv.innerText = "Vui lòng nhập tên ít nhất một chủ đề!";
+            resultDiv.className = "winner-text";
+            resultDiv.style.fontSize = "1.2rem";
+            return;
+        }
+
+        // Khôi phục lại style mặc định trước khi chạy hiệu ứng
+        resultDiv.style.fontSize = "";
+
+        // --- LOGIC MẶC ĐỊNH LẦN ĐẦU CHỌN CHỦ ĐỀ 2 ---
+        let priorityTopic = null;
+        if (!prioritySelected) {
+            // Tìm trong danh sách xem có dòng nào chứa số "2" không
+            priorityTopic = topics.find(topic => topic.includes("2"));
+            // Nếu người dùng không nhập gì có số 2, ép mặc định chuỗi này
+            if (!priorityTopic) {
+                priorityTopic = "Chủ đề 2";
+            }
+        }
+
+        // Hiệu ứng chạy ngẫu nhiên lướt qua các chủ đề trước khi dừng
+        let counter = 0;
+        const interval = setInterval(() => {
+            const tempRandom = topics[Math.floor(Math.random() * topics.length)];
+            resultDiv.innerText = tempRandom;
+            resultDiv.className = "winner-text";
+            counter++;
+            
+            if (counter > 15) {
+                clearInterval(interval);
+                
+                // --- KẾT QUẢ CHÍNH THỨC ---
+                let finalWinner;
+                
+                // Nếu là lần bấm đầu tiên -> Chốt kết quả là Chủ đề 2
+                if (!prioritySelected) {
+                    finalWinner = priorityTopic;
+                    prioritySelected = true; // Đánh dấu là đã thực hiện xong lần đầu
+                } else {
+                    // Từ lần bấm thứ 2 trở đi -> Quay ngẫu nhiên thực sự
+                    finalWinner = topics[Math.floor(Math.random() * topics.length)];
+                }
+                
+                resultDiv.innerHTML = `🏆 ${finalWinner} 🏆`;
+            }
+        }, 70);
+    }
+
+    function resetAll() {
+        document.getElementById('topicNames').value = "CHỦ ĐỀ 1\nCHỦ ĐỀ 2\nCHỦ ĐỀ 3\nCHỦ ĐỀ 4";
+        document.getElementById('resultText').innerText = "Kết quả sẽ hiển thị tại đây";
+        document.getElementById('resultText').className = "";
+        document.getElementById('resultText').style.color = "#999";
+        document.getElementById('resultText').style.fontSize = "";
+        prioritySelected = false; // Bấm xóa thì reset lại đặc quyền lần đầu
+    }
+</script>
+
+</body>
+</html>

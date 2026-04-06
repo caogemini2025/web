@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VÒNG QUAY TRI THỨC - PHIÊN BẢN V4.6 LEADERBOARD</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #00f2ff; --secondary: #7000ff; --accent: #ff007a;
+            --bg: #050a18; --panel: rgba(13, 25, 48, 0.98); --gold: #f6d365;
+            --danger: #ff3366; --success: #00ff88;
+        }
+
+        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { margin: 0; background: radial-gradient(circle at center, #101a32 0%, #050a18 100%); color: #fff; min-height: 100vh; overflow: hidden; }
+
+        /* --- SETUP SCREEN --- */
+        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .setup-card { background: var(--panel); padding: 50px; border-radius: 60px; border: 4px solid var(--primary); width: 1100px; text-align: center; box-shadow: 0 0 150px rgba(0, 242, 255, 0.4); }
+        .setup-card h2 { font-size: 3rem; margin-bottom: 25px; color: var(--primary); font-weight: 900; text-transform: uppercase; }
+        .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 22px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.2); background: #1e293b; color: #fff; font-size: 1.5rem; text-align: center; font-weight: bold; }
+
+        /* --- RULES SCREEN STYLES (UPDATED FOR FULL SCREEN/NO SCROLL) --- */
+        #ruleScreen .setup-card {
+            width: 96vw;
+            height: 92vh;
+            padding: 30px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        
+        #ruleScreen h2 { font-size: 2.8rem; margin-bottom: 20px; flex-shrink: 0; }
+
+        .rules-content { 
+            text-align: left; 
+            font-size: 1.25rem; /* Chữ to hơn */
+            line-height: 1.5; 
+            color: #ddd; 
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Chia 2 cột */
+            gap: 60px;
+            flex-grow: 1;
+            align-items: center; /* Căn giữa dọc */
+            overflow: hidden; /* Bỏ thanh cuộn */
+        }
+
+        .rules-content h3 { color: var(--gold); border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px; font-size: 1.5rem; }
+        .rules-content ul { list-style: none; padding-left: 0; margin: 0; }
+        .rules-content li { margin-bottom: 8px; position: relative; padding-left: 25px; }
+        .rules-content li:before { content: '►'; color: var(--primary); position: absolute; left: 0; }
+        .rules-content p { margin-bottom: 10px; }
+        .rules-content strong { color: var(--success); }
+        .rules-content b { color: var(--accent); }
+
+        /* --- PRACTICE BUTTONS (FULL CAPS) --- */
+        .btn-practice { padding: 18px; font-size: 0.9rem; border-radius: 15px; background: rgba(112, 0, 255, 0.2); border: 2px solid var(--secondary); color: #fff; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; line-height: 1.2; }
+        .btn-practice:hover { background: var(--secondary); transform: scale(1.05); }
+
+        /* --- HEADER --- */
+        header { text-align: center; padding: 20px; background: rgba(0,0,0,0.6); border-bottom: 5px solid var(--secondary); backdrop-filter: blur(20px); position: relative; z-index: 10; }
+        .logo { font-size: 3.5rem; font-weight: 900; background: linear-gradient(to right, var(--primary), var(--gold), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: 12px; filter: drop-shadow(0 0 20px rgba(0,242,255,0.6)); }
+
+        /* --- LAYOUT GRID --- */
+        .main-grid { display: grid; grid-template-columns: 450px 1fr 450px; gap: 30px; padding: 30px; height: calc(100vh - 140px); position: relative; z-index: 5; }
+        .panel { background: var(--panel); border-radius: 50px; border: 3px solid rgba(255,255,255,0.1); padding: 35px; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.8); }
+        .panel-title { color: var(--primary); font-weight: 900; text-transform: uppercase; margin-bottom: 20px; border-bottom: 4px solid var(--secondary); padding-bottom: 10px; font-size: 1.6rem; }
+
+        /* --- WHEEL --- */
+        .wheel-container { position: relative; width: 620px; height: 620px; border: 20px solid #1e293b; border-radius: 50%; box-shadow: 0 0 100px rgba(0,0,0,1); background: #000; }
+        .wheel-canvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 9s cubic-bezier(0.1, 0, 0.1, 1); }
+        .wheel-pointer { position: absolute; top: -45px; left: 50%; transform: translateX(-50%); width: 80px; height: 100px; background: var(--accent); clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 100; border: 4px solid white; filter: drop-shadow(0 10px 15px #000); }
+
+        /* --- RESULTS TABLE --- */
+        .results-table { width: 100%; border-collapse: collapse; font-size: 1.6rem; margin-top: 10px; }
+        .results-table th { color: var(--primary); text-align: left; padding: 15px; border-bottom: 3px solid var(--primary); font-weight: 900; }
+        .results-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 800; }
+        .results-table tr.active { background: rgba(0, 242, 255, 0.15); border-left: 5px solid var(--primary); }
+
+        /* --- DICE & TIMER --- */
+        .dice-display { font-size: 9rem; font-weight: 900; text-align: center; background: #0d1930; border-radius: 40px; padding: 30px; border: 5px solid var(--primary); margin-bottom: 20px; color: #fff; }
+        
+        #timerBox { 
+            font-size: 4rem; 
+            font-weight: 900; 
+            color: #fff; 
+            background: var(--danger);
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 50px auto 20px auto;
+            border: 4px solid #fff;
+            box-shadow: 0 0 40px rgba(255, 51, 102, 0.6);
+            z-index: 10;
+            position: relative;
+        }
+
+        .timer-bar { 
+            width: 60%; 
+            max-width: 800px;
+            height: 24px; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 20px; 
+            overflow: hidden; 
+            margin: 0 auto 40px auto;
+            border: 2px solid rgba(255,255,255,0.3); 
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        }
+        
+        #timerProgress { width: 100%; height: 100%; background: linear-gradient(to right, var(--success), var(--danger)); transition: width 1s linear; }
+
+        /* --- QUESTION OVERLAY --- */
+        .question-overlay { 
+            display: none; position: fixed; inset: 0; 
+            background: radial-gradient(circle at center, #0e162b 0%, #020408 100%); 
+            z-index: 5000; padding: 40px 100px; text-align: center; 
+            animation: fadeIn 0.5s ease;
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+
+        #qText { 
+            font-size: 3rem; 
+            font-weight: 900; 
+            margin-bottom: 50px; 
+            line-height: 1.4; 
+            color: #fff; 
+            min-height: 180px; 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1400px; margin: 0 auto; }
+        .opt-btn { background: rgba(0, 242, 255, 0.05); padding: 40px; border-radius: 30px; cursor: pointer; border: 3px solid rgba(0, 242, 255, 0.2); font-size: 2rem; font-weight: 700; color: #fff; text-align: left; transition: 0.3s; position: relative; overflow: hidden; }
+        .opt-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 40px var(--primary); transform: translateY(-5px); border-color: #fff; }
+
+        /* --- BUTTONS --- */
+        .btn { width: 100%; padding: 30px; border-radius: 25px; border: none; font-weight: 900; cursor: pointer; text-transform: uppercase; color: #fff; font-size: 1.6rem; transition: 0.3s; margin-bottom: 15px; }
+        .btn-main { background: linear-gradient(to bottom, var(--secondary), #4a00aa); box-shadow: 0 10px 0 #310070; }
+        .btn-spin { background: linear-gradient(to bottom, var(--accent), #aa0052); box-shadow: 0 10px 0 #700036; }
+        
+        /* Nút Dừng cuộc chơi */
+        .btn-stop { background: linear-gradient(to bottom, #ff9900, #cc6600); box-shadow: 0 10px 0 #994d00; }
+        
+        .btn:disabled { opacity: 0.2; filter: grayscale(1); }
+
+        .announcement { position: fixed; inset: 0; z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.98); text-align: center; }
+        .announce-text { font-size: 10rem; font-weight: 900; text-transform: uppercase; color: var(--gold); text-shadow: 0 0 80px var(--gold); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<audio id="planeSfx" src="https://assets.mixkit.co/active_storage/sfx/1947/1947-preview.mp3"></audio>
+<audio id="spinMusic" src="am-thanh-tro-choi-quay-banh-xe-may-man-www_tiengdong_com.mp3" loop></audio>
+<audio id="tickSfx" src="https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3"></audio>
+<audio id="timerMusic" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3" loop></audio>
+<audio id="winSfx" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
+<audio id="failSfx" src="https://assets.mixkit.co/active_storage/sfx/253/253-preview.mp3"></audio>
+
+<div id="ruleScreen" class="overlay" style="z-index: 10000;">
+    <div class="setup-card">
+        <h2>THỂ LỆ TRÒ CHƠI</h2>
+        <div class="rules-content">
+            <div class="rules-left">
+                <h3>1. Mục đích</h3>
+                <p>Kiểm tra kiến thức của người chơi (sinh viên/học viên) thông qua hình thức gameshow tương tác, kết hợp giữa may mắn và <strong>Kiến thức lý luận chính trị</strong>.</p>
+                
+                <h3>2. Thành phần tham gia</h3>
+                <ul>
+                    <li><strong>Giảng viên:</strong> Người cấu hình câu hỏi, quay số chọn người chơi và điều khiển cuộc thi.</li>
+                    <li><strong>Người chơi:</strong> Các thí sinh được hệ thống chọn ngẫu nhiên theo số báo danh (SBD).</li>
+                </ul>
+
+                <h3>3. Quy trình chuẩn bị (Giảng viên)</h3>
+                <ul>
+                    <li><strong>Cấu hình:</strong> Nhập Tên môn học, Tên lớp và Tổng số thí sinh (Max SBD).</li>
+                    <li><strong>Ngân hàng câu hỏi:</strong> Chọn bộ câu hỏi có sẵn hoặc nạp file Excel riêng.</li>
+                </ul>
+            </div>
+
+            <div class="rules-right">
+                <h3>4. Luật chơi chi tiết</h3>
+                <p><strong>Bước 1: Chọn người chơi</strong><br>
+                Giảng viên nhấn "XÁC ĐỊNH NGƯỜI CHƠI", hệ thống chọn ngẫu nhiên SBD.</p>
+
+                <p><strong>Bước 2: Quay thưởng & Trả lời</strong><br>
+                Thí sinh quay vòng quay. Có các trường hợp:</p>
+                <ul>
+                    <li><strong>Ô điểm số (10-100):</strong> Trả lời 1 câu hỏi (20s). Đúng cộng điểm. <b>Sai: Dừng cuộc chơi và số điểm được tính sau khi sai.</b></li>
+                    <li><strong>Ô đặc biệt:</strong> 🚪MẤT LƯỢT, ❌MẤT ĐIỂM, 🌟NHÂN ĐÔI, 🚀NHÂN BA, 📉CHIA ĐÔI.</li>
+                </ul>
+
+                <p><strong>Bước 3: Quyền dừng cuộc chơi</strong><br>
+                Sau khi trả lời đúng, thí sinh chọn: <b>Tiếp tục quay</b> hoặc <b>Dừng cuộc chơi</b> (bảo toàn điểm).</p>
+
+                <h3>5. Xếp hạng</h3>
+                <p>Hệ thống tự động xếp hạng. Cuối giờ Giảng viên công bố Quán quân.</p>
+            </div>
+        </div>
+        <button class="btn btn-main" style="margin-top: 20px; width: 400px; align-self: center;" onclick="closeRules()">ĐÃ HIỂU LUẬT CHƠI</button>
+    </div>
+</div>
+
+<div id="setupScreen" class="overlay" style="display: none;"> <div class="setup-card">
+        <h2>CẤU HÌNH PHÒNG THI</h2>
+        <div class="setup-grid">
+            <input type="text" id="subjectInput" placeholder="TÊN MÔN HỌC">
+            <input type="text" id="classInput" placeholder="TÊN LỚP ĐÀO TẠO">
+        </div>
+        <input type="number" id="maxSBDInput" placeholder="TỔNG SỐ THÍ SINH (VD: 50)" style="margin-bottom: 25px;">
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+            <button class="btn-practice" onclick="setPractice('TRIẾT HỌC MÁC - LÊNIN')">TRIẾT HỌC MÁC - LÊNIN</button>
+            <button class="btn-practice" onclick="setPractice('KINH TẾ CHÍNH TRỊ')">KINH TẾ CHÍNH TRỊ</button>
+            <button class="btn-practice" onclick="setPractice('CHỦ NGHĨA XÃ HỘI KHOA HỌC')">CHỦ NGHĨA XÃ HỘI KHOA HỌC</button>
+            <button class="btn-practice" onclick="setPractice('LỊCH SỬ ĐẢNG CỘNG SẢN VIỆT NAM')">LỊCH SỬ ĐẢNG CỘNG SẢN VIỆT NAM</button>
+            <button class="btn-practice" onclick="setPractice('XÂY DỰNG ĐẢNG')">XÂY DỰNG ĐẢNG</button>
+            <button class="btn-practice" onclick="setPractice('TƯ TƯỞNG HỒ CHÍ MINH')">TƯ TƯỞNG HỒ CHÍ MINH</button>
+        </div>
+
+        <div style="border: 3px dashed var(--secondary); padding: 20px; border-radius: 20px; margin-bottom: 25px;">
+            <input type="file" id="excelInput" accept=".xlsx, .xls">
+        </div>
+        <button class="btn btn-main" onclick="initGame()">KHỞI CHẠY GAMESHOW</button>
+    </div>
+</div>
+
+<header id="mainHeader">
+    <h1 class="logo">VÒNG QUAY TRI THỨC</h1>
+    <div style="display: flex; justify-content: center; gap: 70px; margin-top: 15px; font-size: 2rem; font-weight: 900;">
+        <span id="displaySubject" style="color:var(--primary)">MÔN: ---</span>
+        <span id="displayClass" style="color:var(--gold)">LỚP: ---</span>
+        <span id="displayDate" style="color:var(--accent)">NGÀY: ---</span>
+    </div>
+</header>
+
+<div class="main-grid" id="mainGrid">
+    <div class="panel">
+        <div class="panel-title">THÍ SINH TRANH TÀI</div>
+        <div class="dice-display" id="diceBox">?</div>
+        <button class="btn btn-main" id="rollBtn" onclick="pickStudent()">XÁC ĐỊNH NGƯỜI CHƠI</button>
+        <div id="activeSBD" style="text-align: center; font-size: 2.5rem; font-weight: 900; color: var(--primary); margin-top: 25px;">SBD: ---</div>
+        
+        <div style="background: rgba(0,242,255,0.1); padding: 35px; border-radius: 40px; border: 5px solid var(--primary); text-align: center; margin-top: 25px;">
+            <div style="font-size: 1.3rem; opacity: 0.8; font-weight: 900; text-transform: uppercase;">ĐIỂM HIỆN TẠI</div>
+            <div id="liveScore" style="font-size: 5rem; font-weight: 900; color: var(--gold);">0</div>
+        </div>
+        
+        <button class="btn btn-stop" id="stopBtn" onclick="stopGame()" disabled style="margin-top: 15px;">DỪNG CUỘC CHƠI</button>
+    </div>
+
+    <div class="panel" style="align-items: center; justify-content: center; position: relative;">
+        <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" class="wheel-canvas" width="600" height="600"></canvas>
+        </div>
+        <div style="width: 500px; margin-top: 40px; text-align: center;">
+            <button class="btn btn-spin" id="spinBtn" onclick="spinWheel()" disabled>QUAY ĐIỂM THƯỞNG</button>
+            <div id="spinResultText" style="font-size: 3rem; font-weight: 900; color: var(--gold); height: 60px;">---</div>
+        </div>
+
+        <div id="questionArea" class="question-overlay">
+            <h2 id="qText"></h2>
+            <div class="opt-grid" id="qOpts"></div>
+            
+            <div id="timerBox">20</div>
+            <div class="timer-bar"><div id="timerProgress"></div></div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+            <span class="panel-title" style="margin:0; border:none;">KẾT QUẢ</span>
+            <div style="display:flex; flex-direction:column; gap:10px; align-items: flex-end;">
+                <button class="btn btn-main" style="width:auto; padding:15px 30px; font-size: 1rem;" onclick="announceWinner()">CÔNG BỐ</button>
+                <button class="btn btn-main" style="width:auto; padding:15px 30px; font-size: 1rem;" onclick="exportResults()">XUẤT EXCEL</button>
+            </div>
+        </div>
+        <div id="leaderboard" style="flex-grow: 1; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<div id="announceScreen" class="announcement">
+    <div class="announce-text" id="announceTitle">CHÚC MỪNG</div>
+    <div class="announce-sub" id="announceDesc" style="font-size: 3rem; margin: 40px 0 60px 0;">...</div>
+    <button class="btn btn-main" style="width: 500px;" onclick="closeAnnounce()">TIẾP TỤC</button>
+</div>
+
+<script>
+    const practiceData = {
+        "TRIẾT HỌC MÁC - LÊNIN": [{ q: "Vấn đề cơ bản của triết học là gì?", a: ["Vấn đề con người","Vấn đề vật chất và ý thức","Vấn đề giai cấp","Vấn đề logic"], c: 2 },{ q: "Theo Phép biện chứng duy vật, cái nào quyết định cái nào?", a: ["Ý thức quyết định vật chất","Con người quyết định tự nhiên","Vật chất quyết định ý thức","Cả hai ngang nhau"], c: 3 },{ q: "Nguồn gốc tự nhiên của ý thức bao gồm?", a: ["Bộ óc người và thế giới khách quan","Lao động và ngôn ngữ","Tư duy và ký ức","Cảm giác và tri giác"], c: 1 },{ q: "Quy luật nào vạch ra cách thức của sự vận động, phát triển?", a: ["Quy luật mâu thuẫn","Quy luật lượng - chất","Quy luật phủ định của phủ định","Quy luật nhân quả"], c: 2 },{ q: "Phạm trù nào dùng để chỉ những mặt trái ngược nhau trong một sự vật?", a: ["Mặt đối lập","Mẫu thuẫn","Cạnh tranh","Xung đột"], c: 1 },{ q: "Sự chuyển hóa từ những thay đổi về lượng dẫn đến sự thay đổi về chất gọi là?", a: ["Nhảy vọt","Tiệm tiến","Cách mạng","Biến hóa"], c: 1 },{ q: "Cái gì là cơ sở và mục đích của nhận thức?", a: ["Lý luận","Thực tiễn","Tư duy","Sách vở"], c: 2 },{ q: "Phát triển là một quá trình đi theo đường gì?", a: ["Đường thẳng","Đường tròn","Đường xoáy ốc","Đường gấp khúc"], c: 3 },{ q: "Hai mặt của phương thức sản xuất là gì?", a: ["Lực lượng SX và Quan hệ SX","Tư liệu và Nhân lực","Nông nghiệp và Công nghiệp","Vốn và Kỹ thuật"], c: 1 },{ q: "Cấu trúc của một hình thái kinh tế - xã hội bao gồm?", a: ["LLSX, QHSX và Kiến trúc thượng tầng","Giai cấp và Nhà nước","Tư bản và Công nhân","Vật chất và Tinh thần"], c: 1 }],
+        "KINH TẾ CHÍNH TRỊ": [{ q: "Hai thuộc tính của hàng hóa là gì?", a: ["Giá trị và giá trị sử dụng","Giá trị và giá trị trao đổi","Giá trị và tiền tệ","Sử dụng và trao đổi"], c: 1 },{ q: "Quy luật kinh tế cơ bản của sản xuất hàng hóa là quy luật nào?", a: ["Quy luật thặng dư","Quy luật cung cầu","Quy luật giá trị","Quy luật cạnh tranh"], c: 3 },{ q: "Giá trị hàng hóa được quyết định bởi yếu tố nào?", a: ["Công dụng hàng hóa","Độ khan hiếm","Thời gian lao động xã hội cần thiết","Giá cả thị trường"], c: 3 },{ q: "Tiền tệ có bao nhiêu chức năng theo Mác?", a: ["3 chức năng","4 chức năng","5 chức năng","6 chức năng"], c: 3 },{ q: "Nguồn gốc của giá trị thặng dư là do?", a: ["Máy móc sinh ra","Trao đổi mua bán","Sức lao động của công nhân làm thuê","Vốn của chủ tư bản"], c: 3 },{ q: "Sản xuất thặng dư tuyệt đối được thực hiện bằng cách nào?", a: ["Tăng cường độ lao động","Kéo dài ngày lao động","Cải tiến kỹ thuật","Tăng năng suất"], c: 2 },{ q: "Cấu tạo hữu cơ của tư bản ký hiệu là gì?", a: ["c/v","v/c","c+v","m/v"], c: 1 },{ q: "Tư bản bất biến (c) bao gồm?", a: ["Máy móc, nhà xưởng, nguyên liệu","Sức lao động","Tiền mặt","Lương nhân viên"], c: 1 },{ q: "Tích tụ tư bản là quá trình gì?", a: ["Gộp các tư bản nhỏ","Tăng quy mô bằng giá trị thặng dư","Vay vốn ngân hàng","Bán cổ phần"], c: 2 },{ q: "Địa tô tư bản chủ nghĩa là phần thặng dư ngoài?", a: ["Lợi nhuận độc quyền","Lợi nhuận bình quân","Lợi tức","Địa tô chênh lệch"], c: 2 }],
+        "CHỦ NGHĨA XÃ HỘI KHOA HỌC": [{ q: "Sứ mệnh lịch sử của giai cấp nào là xóa bỏ chế độ tư bản?", a: ["Giai cấp nông dân","Giai cấp công nhân","Tầng lớp trí thức","Giai cấp tư sản"], c: 2 },{ q: "Đặc điểm của thời kỳ quá độ lên chủ nghĩa xã hội là gì?", a: ["Đã hoàn thiện XHCN","Sự đan xen giữa cái cũ và cái mới","Không còn giai cấp","Kinh tế thị trường tự do"], c: 2 },{ q: "Phát kiến vĩ đại thứ 3 của Mác và Ăngghen là gì?", a: ["Chủ nghĩa duy vật lịch sử","Học thuyết giá trị thặng dư","Học thuyết về sứ mệnh lịch sử giai cấp công nhân","Học thuyết tiến hóa"], c: 3 },{ q: "Giai cấp công nhân là sản phẩm của nền sản xuất nào?", a: ["Nông nghiệp","Thủ công nghiệp","Đại công nghiệp","Kinh tế tri thức"], c: 3 },{ q: "Nguyên tắc cao nhất của chuyên chính vô sản là liên minh?", a: ["Công nhân và Trí thức","Công nhân và Nông dân","Nông dân và Tư sản","Vô sản quốc tế"], c: 2 },{ q: "Dân chủ XHCN có điểm khác biệt cơ bản là dân chủ cho?", a: ["Mọi người","Đại đa số nhân dân lao động","Người giàu","Giai cấp tư sản"], c: 2 },{ q: "Nhà nước XHCN mang bản chất của giai cấp nào?", a: ["Nông dân","Công nhân","Trí thức","Toàn dân"], c: 2 },{ q: "Vấn đề dân tộc trong CNXH được thực hiện trên nguyên tắc?", a: ["Bình đẳng, đoàn kết, giúp đỡ nhau","Tự trị tuyệt đối","Đồng hóa dân tộc","Phân chia địa giới"], c: 1 },{ q: "Gia đình trong thời kỳ quá độ có chức năng cơ bản nào?", a: ["Tái sản xuất con người","Nuôi dưỡng giáo dục","Phát triển kinh tế","Cả 3 phương án trên"], c: 4 },{ q: "Tôn giáo trong CNXH sẽ dần mất đi khi nào?", a: ["Dùng mệnh lệnh hành chính","Trình độ dân trí cao và đời sống ấm no","Cấm đoán tuyệt đối","Phát triển kinh tế"], c: 2 }],
+        "LỊCH SỬ ĐẢNG CỘNG SẢN VIỆT NAM": [{ q: "Đảng Cộng sản Việt Nam ra đời là sự kết hợp của mấy yếu tố?", a: ["2 yếu tố","3 yếu tố","4 yếu tố","5 yếu tố"], c: 2 },{ q: "Hội nghị thành lập Đảng (1930) diễn ra ở đâu?", a: ["Quảng Châu","Ma Cao","Cửu Long (Hương Cảng)","Pác Bó"], c: 3 },{ q: "Tổng Bí thư đầu tiên của Đảng ta là ai?", a: ["Hồ Chí Minh","Trần Phú","Lê Hồng Phong","Hà Huy Tập"], c: 2 },{ q: "Cương lĩnh chính trị đầu tiên do ai soạn thảo?", a: ["Trần Phú","Nguyễn Ái Quốc","Lê Hồng Phong","Nguyễn Văn Cừ"], c: 2 },{ q: "Chiến thắng Điện Biên Phủ kết thúc vào năm nào?", a: ["1945","1954","1960","1975"], c: 2 },{ q: "Đại hội đại biểu toàn quốc lần thứ II (1951) đổi tên Đảng là gì?", a: ["Đảng Cộng sản Đông Dương","Đảng Lao động Việt Nam","Đảng Cộng sản Việt Nam","Đảng Nhân dân"], c: 2 },{ q: "Ngày giải phóng miền Nam thống nhất đất nước?", a: ["2-9","30-4","19-5","22-12"], c: 2 },{ q: "Đại hội VI (1986) đề ra đường lối gì quan trọng?", a: ["Kháng chiến kiến quốc","Công nghiệp hóa","Đổi mới toàn diện","Xây dựng miền Bắc"], c: 3 },{ q: "Cương lĩnh 1991 xác định nước ta có mấy đặc trưng XHCN?", a: ["5 đặc trưng","6 đặc trưng","7 đặc trưng","8 đặc trưng"], c: 2 },{ q: "Hội nghị hiệp thương thống nhất đất nước diễn ra năm nào?", a: ["1975","1976","1977","1978"], c: 1 }],
+        "XÂY DỰNG ĐẢNG": [{ q: "Nguyên tắc tổ chức cơ bản của Đảng là gì?", a: ["Tự phê bình","Tập trung dân chủ","Đoàn kết thống nhất","Kỷ luật nghiêm minh"], c: 2 },{ q: "Cơ quan lãnh đạo cao nhất của Đảng là gì?", a: ["Bộ Chính trị","Ban Bí thư","Đại hội đại biểu toàn quốc","Trung ương"], c: 3 },{ q: "Đảng lãnh đạo hệ thống chính trị bằng phương thức nào?", a: ["Cầm tay chỉ việc","Thông qua tổ chức Đảng và Đảng viên","Ra mệnh lệnh hành chính","Thay mặt Nhà nước"], c: 2 },{ q: "Phương châm của công tác kiểm tra, giám sát là gì?", a: ["Chủ động, chiến đấu, giáo dục, hiệu quả","Nêm minh, kịp thời","Bí mật, bất ngờ","Công khai, dân chủ"], c: 1 },{ q: "Xây dựng Đảng về chính trị trọng tâm là gì?", a: ["Học tập lý luận","Kiên định chủ nghĩa Mác - Lênin","Đào tạo cán bộ","Cải cách bộ máy"], c: 2 },{ q: "Tự phê bình và phê bình là quy luật gì của Đảng?", a: ["Quy luật sống còn","Quy luật phát triển","Quy luật tổ chức","Quy luật đạo đức"], c: 2 },{ q: "Đội ngũ cán bộ là nhân tố quyết định sự gì?", a: ["Phát triển kinh tế","Thắng lợi của sự nghiệp cách mạng","An ninh quốc gia","Hòa bình thế giới"], c: 2 },{ q: "Đảng viên phải chấp hành nghiêm túc điều gì?", a: ["Điều lệ Đảng","Pháp luật Nhà nước","Nghị quyết của Đảng","Tất cả các phương án trên"], c: 4 },{ q: "Tổ chức cơ sở Đảng là hạt nhân chính trị ở đâu?", a: ["Trung ương","Cấp tỉnh","Cơ sở","Toàn quốc"], c: 3 },{ q: "Đoàn kết thống nhất trong Đảng là gì của cách mạng?", a: ["Động lực","Mục tiêu","Gốc của thắng lợi","Vấn đề then chốt"], c: 3 }],
+        "TƯ TƯỞNG HỒ CHÍ MINH": [{ q: "Giá trị cốt lõi của Tư tưởng Hồ Chí Minh là gì?", a: ["Hòa bình thế giới","Độc lập dân tộc gắn liền CNXH","Phát triển kinh tế","Đại đoàn kết"], c: 2 },{ q: "Hồ Chí Minh tìm thấy con đường cứu nước khi đọc tài liệu nào?", a: ["Sơ thảo Luận cương của Lênin","Đường Kách mệnh","Tuyên ngôn độc lập","Bản án thực dân"], c: 1 },{ q: "Tư tưởng Hồ Chí Minh trở thành tư tưởng chỉ đạo từ Đại hội nào?", a: ["Đại hội VI","Đại hội VII","Đại hội VIII","Đại hội IX"], c: 2 },{ q: "Về đạo đức, Hồ Chí Minh nhấn mạnh phẩm chất hàng đầu là?", a: ["Yêu thương con người","Cần, Kiệm, Liêm, Chính","Trung với nước, Hiếu với dân","Tinh thần quốc tế"], c: 3 },{ q: "Cốt lõi tư tưởng đạo đức Hồ Chí Minh là gì?", a: ["Lòng nhân ái","Chủ nghĩa nhân văn","Sự hy sinh","Đạo đức cách mạng"], c: 4 },{ q: "Quan điểm 'Lấy dân làm gốc' thể hiện tư tưởng nào?", a: ["Dân chủ","Dân vận","Đại đoàn kết","Cả 3 phương án trên"], c: 4 },{ q: "Theo Bác, muốn xây dựng CNXH trước hết cần có cái gì?", a: ["Kỹ thuật hiện đại","Con người XHCN","Vốn đầu tư","Tài nguyên thiên nhiên"], c: 2 },{ q: "Phong cách Hồ Chí Minh đặc trưng bởi sự kết hợp?", a: ["Cổ truyền và Hiện đại","Dân tộc và Nhân loại","Giản dị và Thanh cao","Tất cả phương án trên"], c: 4 },{ q: "Bác Hồ ra đi tìm đường cứu nước vào ngày nào?", a: ["19-5-1890","5-6-1911","3-2-1930","2-9-1945"], c: 2 },{ q: "Văn kiện nào được coi là một văn kiện pháp lý quốc tế về quyền con người?", a: ["Đường Kách mệnh","Tuyên ngôn Độc lập (1945)","Di chúc","Bản án chế độ thực dân"], c: 2 }]
+    };
+
+    const segments = [
+        { label: "10", val: 10, type: "score", color: "#FF5733" },
+        { label: "MẤT LƯỢT", val: 0, type: "loss", color: "#000000", icon: "🚪" },
+        { label: "20", val: 20, type: "score", color: "#33FF57" },
+        { label: "MẤT ĐIỂM", val: 0, type: "reset", color: "#ff3366", icon: "❌" },
+        { label: "40", val: 40, type: "score", color: "#3357FF" },
+        { label: "NHÂN ĐÔI", val: 0, type: "double", color: "#7000ff", icon: "🌟" },
+        { label: "60", val: 60, type: "score", color: "#F1C40F" },
+        { label: "CHIA ĐÔI", val: 0, type: "halve", color: "#E67E22", icon: "📉" },
+        { label: "80", val: 80, type: "score", color: "#9B59B6" },
+        { label: "NHÂN BA", val: 0, type: "triple", color: "#ffd700", icon: "🚀" },
+        { label: "100", val: 100, type: "score", color: "#1ABC9C" },
+        { label: "5", val: 5, type: "score", color: "#E74C3C" }
+    ];
+
+    let questions = [];
+    let state = { subject: "", className: "", date: "", sbd: null, score: 0, results: {}, rotation: 0, timer: 20, timerInt: null, maxSBD: 0, studentPool: [] };
+
+    function playSfx(id, volume = 1.0) { const s = document.getElementById(id); if(s) { s.volume = volume; s.currentTime = 0; s.play().catch(()=>{}); } }
+    function stopSfx(id) { const s = document.getElementById(id); if(s) s.pause(); }
+
+    // HÀM ĐÓNG LUẬT CHƠI (MỚI)
+    function closeRules() {
+        document.getElementById('ruleScreen').style.display = 'none';
+        document.getElementById('setupScreen').style.display = 'flex';
+    }
+
+    function setPractice(subj) {
+        questions = [...practiceData[subj]];
+        document.getElementById('subjectInput').value = subj;
+        alert("ĐÃ NẠP 10 CÂU HỎI THI THỬ!");
+    }
+
+    document.getElementById('excelInput').addEventListener('change', function(e) {
+        const r = new FileReader();
+        r.onload = (ev) => {
+            const d = new Uint8Array(ev.target.result);
+            const w = XLSX.read(d, { type: 'array' });
+            const s = w.Sheets[w.SheetNames[0]];
+            const j = XLSX.utils.sheet_to_json(s, { header: 1, raw: false });
+            questions = j.slice(1).map(row => ({
+                q: String(row[0]||""), a: [String(row[1]||""), String(row[2]||""), String(row[3]||""), String(row[4]||"")], c: parseInt(row[5])
+            })).filter(i => i.q !== "");
+            alert("ĐÃ NẠP THÀNH CÔNG " + questions.length + " CÂU HỎI!");
+        };
+        r.readAsArrayBuffer(e.target.files[0]);
+    });
+
+    function initGame() {
+        state.subject = document.getElementById('subjectInput').value || "MÔN HỌC";
+        state.className = document.getElementById('classInput').value || "LỚP TỰ DO";
+        state.maxSBD = parseInt(document.getElementById('maxSBDInput').value) || 100;
+        state.date = new Date().toLocaleDateString('vi-VN');
+        state.studentPool = Array.from({length: state.maxSBD}, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('displaySubject').innerText = "MÔN: " + state.subject;
+        document.getElementById('displayClass').innerText = "LỚP: " + state.className;
+        document.getElementById('displayDate').innerText = "NGÀY: " + state.date;
+        drawWheel();
+    }
+
+    function drawWheel() {
+        const c = document.getElementById('wheelCanvas');
+        const x = c.getContext('2d');
+        const s = (Math.PI * 2) / segments.length;
+        x.clearRect(0,0,600,600);
+        segments.forEach((seg, i) => {
+            const a = i * s;
+            const g = x.createRadialGradient(300,300,50, 300,300,300);
+            g.addColorStop(0, seg.color); g.addColorStop(1, "#000");
+            x.beginPath(); x.fillStyle = g; x.moveTo(300, 300); x.arc(300, 300, 290, a, a + s); x.fill();
+            x.strokeStyle = "#fff"; x.lineWidth = 4; x.stroke();
+            x.save(); x.translate(300, 300); x.rotate(a + s / 2);
+            x.textAlign = "right"; x.fillStyle = "#fff"; x.font = "900 35px Montserrat";
+            x.fillText((seg.icon || "") + " " + seg.label, 270, 15); x.restore();
+        });
+        x.beginPath(); x.arc(300,300,60,0,Math.PI*2); x.fillStyle = "#fff"; x.fill();
+    }
+
+    function pickStudent() {
+        if(state.studentPool.length === 0) {
+            alert("ĐÃ HẾT THÍ SINH! RESET.");
+            state.studentPool = Array.from({length: state.maxSBD}, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+        }
+        playSfx('planeSfx', 1.0);
+        const finalSBD = state.studentPool.pop();
+        let c = 0;
+        const i = setInterval(() => {
+            document.getElementById('diceBox').innerText = Math.floor(Math.random() * state.maxSBD) + 1;
+            if(c++ > 35) {
+                clearInterval(i);
+                state.sbd = finalSBD;
+                document.getElementById('diceBox').innerText = state.sbd;
+                document.getElementById('activeSBD').innerText = "MỜI SBD: " + state.sbd;
+                document.getElementById('spinBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = false; // Bật nút Dừng
+                document.getElementById('rollBtn').disabled = true;
+                state.score = state.results[state.sbd] || 0;
+                updateScoreUI();
+            }
+        }, 80);
+    }
+
+    /* --- LOGIC ÂM THANH LẠCH CẠCH --- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playMechanicalTick() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function spinWheel() {
+        playSfx('spinMusic', 0.8); 
+        const b = document.getElementById('spinBtn'); b.disabled = true;
+        document.getElementById('stopBtn').disabled = true; // Tắt nút Dừng khi đang quay
+        const spin = 3600 + Math.floor(Math.random() * 3000);
+        state.rotation += spin;
+        document.getElementById('wheelCanvas').style.transform = `rotate(${state.rotation}deg)`;
+        let lastSegment = -1; const startTime = Date.now(); const duration = 9000;
+        const checkTick = () => {
+            const elapsed = Date.now() - startTime;
+            if (elapsed < duration) {
+                const progress = elapsed / duration; const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentDeg = (state.rotation - (spin * (1 - easeOut))) % 360;
+                const currentSeg = Math.floor(currentDeg / (360 / segments.length));
+                if (currentSeg !== lastSegment) { playMechanicalTick(); lastSegment = currentSeg; }
+                requestAnimationFrame(checkTick);
+            }
+        };
+        requestAnimationFrame(checkTick);
+        setTimeout(() => {
+            stopSfx('spinMusic');
+            const ang = state.rotation % 360;
+            const win = Math.floor((360 - ang + 270) % 360 / (360/segments.length));
+            handleResult(segments[win]);
+        }, duration);
+    }
+
+    // Hàm DỪNG CUỘC CHƠI
+    function stopGame() {
+        playSfx('winSfx');
+        document.getElementById('spinBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = true;
+        showAnnounce("ĐÃ DỪNG CUỘC CHƠI!", "BẢO TOÀN " + state.score + " ĐIỂM", () => saveAndEnd(), "#00f2ff");
+    }
+
+    // Hàm CÔNG BỐ NGƯỜI CHIẾN THẮNG & DANH SÁCH (CẬP NHẬT)
+    function announceWinner() {
+        const scores = state.results;
+        if (Object.keys(scores).length === 0) {
+            alert("CHƯA CÓ DỮ LIỆU ĐỂ CÔNG BỐ!");
+            return;
+        }
+        
+        // Sắp xếp danh sách
+        const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+        const winner = sorted[0];
+
+        // Hiệu ứng pháo hoa hoành tráng
+        playSfx('winSfx');
+        const duration = 3000;
+        const end = Date.now() + duration;
+
+        (function frame() {
+            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+            if (Date.now() < end) { requestAnimationFrame(frame); }
+        }());
+
+        // Tạo nội dung HTML cho bảng vàng
+        let htmlContent = `<div style="color: #00ff88; font-size: 2.5rem; margin-bottom: 20px;">🏆 QUÁN QUÂN: SBD ${winner[0]} (${winner[1]} ĐIỂM) 🏆</div>`;
+        htmlContent += `<div style="max-height: 400px; overflow-y: auto; width: 80%; margin: 0 auto; border: 2px solid #fff; border-radius: 20px; padding: 20px; background: rgba(0,0,0,0.5);">`;
+        htmlContent += `<table style="width: 100%; font-size: 1.5rem; border-collapse: collapse;">`;
+        htmlContent += `<tr style="border-bottom: 2px solid #555; color: var(--primary);"><th>HẠNG</th><th>SBD</th><th>ĐIỂM</th></tr>`;
+        
+        sorted.forEach((item, index) => {
+            const rank = index + 1;
+            const color = rank === 1 ? 'var(--gold)' : '#fff';
+            htmlContent += `<tr style="border-bottom: 1px solid #333; color: ${color};">
+                <td style="padding: 10px;">#${rank}</td>
+                <td style="padding: 10px;">${item[0]}</td>
+                <td style="padding: 10px;">${item[1]}</td>
+            </tr>`;
+        });
+        htmlContent += `</table></div>`;
+
+        // Hiển thị thông báo
+        showAnnounce("BẢNG VÀNG THÀNH TÍCH", htmlContent, () => closeAnnounce(), "#FFD700");
+    }
+
+    function handleResult(seg) {
+        document.getElementById('spinResultText').innerText = "Ô: " + seg.label;
+        if(seg.type === 'loss') { playSfx('failSfx'); showAnnounce("BỊ LOẠI!", "HẸN GẶP LẠI!", () => saveAndEnd(), "#ff3366"); }
+        else if(seg.type === 'reset') { playSfx('failSfx'); state.score = 0; updateScoreUI(); showAnnounce("ĐIỂM VỀ 0!", "BẠN VẪN CÒN CƠ HỘI BỨT PHÁ!", () => showQuestion(seg), "#ffcc00"); }
+        else if(seg.type === 'halve') { playSfx('failSfx'); state.score = Math.floor(state.score / 2); updateScoreUI(); showAnnounce("CHIA ĐÔI!", "HÃY GỠ GẠC LẠI Ở CÂU NÀY!", () => showQuestion(seg), "#ff6600"); }
+        else { showQuestion(seg); }
+    }
+
+    function typeWriter(text, element, callback) {
+        element.innerHTML = ""; let i = 0; const speed = 45; 
+        const timer = setInterval(() => {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i); i++;
+                const tick = audioCtx.createOscillator(); const g = audioCtx.createGain();
+                tick.frequency.value = 800; g.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                tick.connect(g); g.connect(audioCtx.destination); tick.start(); tick.stop(audioCtx.currentTime + 0.05);
+            } else { clearInterval(timer); if (callback) callback(); }
+        }, speed);
+    }
+
+    function showQuestion(seg) {
+        document.getElementById('mainHeader').style.display = 'none'; // Ẩn header khi hiện câu hỏi
+        document.getElementById('questionArea').style.display = 'block';
+        document.getElementById('qOpts').innerHTML = ''; 
+        playSfx('timerMusic', 0.6);
+        const q = questions[Math.floor(Math.random() * questions.length)];
+        typeWriter(q.q, document.getElementById('qText'), () => {
+            const labels = ["A", "B", "C", "D"];
+            q.a.forEach((ans, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'opt-btn';
+                btn.innerText = labels[i] + ". " + ans;
+                btn.onclick = () => checkAnswer(i+1, q.c, seg);
+                document.getElementById('qOpts').appendChild(btn);
+            });
+            startTimer(seg);
+        });
+    }
+
+    function startTimer(seg) {
+        state.timer = 20; document.getElementById('timerBox').innerText = state.timer;
+        document.getElementById('timerProgress').style.width = "100%";
+        state.timerInt = setInterval(() => {
+            state.timer--; document.getElementById('timerBox').innerText = state.timer;
+            document.getElementById('timerProgress').style.width = (state.timer/20)*100 + "%";
+            if (state.timer <= 0) {
+                clearInterval(state.timerInt); stopSfx('timerMusic'); playSfx('failSfx');
+                showAnnounce("HẾT GIỜ!", "KHÔNG ĐƯỢC CỘNG ĐIỂM", () => saveAndEnd(), "#ff3366");
+            }
+        }, 1000);
+    }
+
+    function checkAnswer(u, c, s) {
+        clearInterval(state.timerInt); stopSfx('timerMusic');
+        if(u === c) {
+            playSfx('winSfx'); confetti({ particleCount: 300, spread: 100, origin: { y: 0.6 } });
+            let earned = 0;
+            if(s.type === 'score') earned = s.val;
+            else if(s.type === 'double') earned = state.score;
+            else if(s.type === 'triple') earned = state.score * 2;
+            state.score += earned;
+            updateScoreUI();
+            showAnnounce("CHÍNH XÁC!", "+" + earned + " ĐIỂM", () => {
+                document.getElementById('questionArea').style.display = 'none';
+                document.getElementById('mainHeader').style.display = 'block'; // Hiện lại header
+                document.getElementById('spinBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = false; // Bật lại nút Dừng
+            }, "#00ff88");
+        } else {
+            playSfx('failSfx');
+            showAnnounce("SAI RỒI!", "ĐÁP ÁN ĐÚNG LÀ " + ["A","B","C","D"][c-1], () => saveAndEnd(), "#ff3366");
+        }
+    }
+
+    // CẬP NHẬT: SỬ DỤNG INNERHTML ĐỂ HIỂN THỊ HTML PHỨC TẠP
+    function showAnnounce(t, d, c, color = "#f6d365") {
+        const s = document.getElementById('announceScreen');
+        const title = document.getElementById('announceTitle');
+        title.innerText = t; title.style.color = color;
+        // Sử dụng innerHTML thay vì innerText để hiển thị bảng xếp hạng
+        document.getElementById('announceDesc').innerHTML = d;
+        s.style.display = 'flex'; window.call = c;
+    }
+
+    function closeAnnounce() { document.getElementById('announceScreen').style.display = 'none'; window.call(); }
+    function updateScoreUI() { document.getElementById('liveScore').innerText = state.score; }
+
+    function saveAndEnd() {
+        document.getElementById('mainHeader').style.display = 'block'; // Hiện lại header khi kết thúc lượt
+        state.results[state.sbd] = state.score; updateLeaderboard();
+        document.getElementById('questionArea').style.display = 'none';
+        document.getElementById('rollBtn').disabled = false;
+        document.getElementById('spinBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = true; // Tắt nút Dừng khi hết lượt
+        document.getElementById('activeSBD').innerText = "SBD: ---";
+        document.getElementById('diceBox').innerText = "?";
+    }
+
+    function updateLeaderboard() {
+        const lb = document.getElementById('leaderboard');
+        const sorted = Object.keys(state.results).sort((a,b) => state.results[b] - state.results[a]);
+        let html = `<table class="results-table"><thead><tr><th>SBD</th><th style="text-align:right">ĐIỂM</th></tr></thead><tbody>`;
+        sorted.forEach(s => { html += `<tr class="${s == state.sbd ? 'active' : ''}"><td>#${s}</td><td style="text-align:right; color:var(--gold)">${state.results[s]}đ</td></tr>`; });
+        lb.innerHTML = html + `</tbody></table>`;
+    }
+
+    function exportResults() {
+        const data = [["Ngày", "Môn", "Lớp", "SBD", "Điểm"]];
+        Object.keys(state.results).forEach(s => data.push([state.date, state.subject, state.className, s, state.results[s]]));
+        const ws = XLSX.utils.aoa_to_sheet(data); const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Kết Quả");
+        
+        // --- LOGIC TẠO TÊN FILE MỚI: TENLOP_MON_vongquay_ddmmyy ---
+        const d = new Date();
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = String(d.getFullYear()).slice(-2);
+        const dateStr = `${day}${month}${year}`;
+        
+        // Tạo tên file từ dữ liệu nhập vào
+        const fileName = `${state.className}_${state.subject}_vongquay_${dateStr}.xlsx`;
+        
+        XLSX.writeFile(wb, fileName);
+    }
+</script>
+</body>
+</html>

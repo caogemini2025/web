@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eChat Pro - Fixed Send 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // --- CẤU HÌNH ---
+        const SUPABASE_URL = 'https://iatarpzwbpmvxafkuhvh.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_L8zkZyosiIUfXbznifDV5g_Stvlxt_O';
+        
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch (e) {
+            console.error("Không thể khởi tạo Supabase:", e);
+        }
+
+        let userName = localStorage.getItem('chat_user_name') || "";
+        let userRoom = localStorage.getItem('chat_user_room') || ""; 
+        const groups = ['GroupA', 'GroupB', 'GroupC', 'GroupD'];
+        let messagesState = { GroupA: [], GroupB: [], GroupC: [], GroupD: [] };
+        let selectedFiles = { GroupA: null, GroupB: null, GroupC: null, GroupD: null };
+
+        // --- HÀM GỬI TIN NHẮN (ĐÃ FIX) ---
+        window.sendMessage = async (gid) => {
+            const input = document.getElementById(`input-${gid}`);
+            const text = input.value.trim();
+            const file = selectedFiles[gid];
+            
+            // Nếu không có chữ và không có file thì không gửi
+            if (!text && !file) return;
+
+            console.log(`Đang gửi tin nhắn tới ${gid}: ${text}`);
+
+            // Xóa ô nhập ngay để tạo cảm giác nhanh
+            input.value = '';
+            const currentFile = file;
+            window.removeFile(gid);
+
+            const { data, error } = await supabase
+                .from('messages')
+                .insert([{ 
+                    text: text, 
+                    sender: userName, 
+                    group_id: gid, 
+                    file: currentFile 
+                }]);
+
+            if (error) {
+                console.error("Lỗi gửi tin lên Supabase:", error.message);
+                alert("Lỗi gửi tin: " + error.message);
+                input.value = text; // Trả lại tin cũ nếu lỗi
+            } else {
+                console.log("Gửi thành công!");
+            }
+        };
+
+        window.handleKey = (e, gid) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                window.sendMessage(gid);
+            }
+        };
+
+        // --- FILE & UI ---
+        window.triggerFileInput = (gid) => document.getElementById(`file-input-${gid}`).click();
+        window.handleFileSelect = (e, gid) => {
+            const file = e.target.files[0];
+            if (!file || file.size > 800000) return alert("Tệp quá lớn hoặc lỗi.");
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                selectedFiles[gid] = { name: file.name, type: file.type, data: ev.target.result };
+                const preview = document.getElementById(`file-preview-${gid}`);
+                preview.innerHTML = `<span class="text-[10px] bg-indigo-100 px-2 py-1 rounded-lg font-bold text-indigo-700 inline-flex items-center">📎 ${file.name} <button onclick="removeFile('${gid}')" class="ml-1 text-red-500">✕</button></span>`;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        };
+        window.removeFile = (gid) => {
+            selectedFiles[gid] = null;
+            document.getElementById(`file-preview-${gid}`).classList.add('hidden');
+        };
+
+        // --- APP LOGIC ---
+        window.login = () => {
+            const name = document.getElementById('name-input').value.trim();
+            const room = document.getElementById('room-select').value;
+            if (name && room) {
+                userName = name; userRoom = room;
+                localStorage.setItem('chat_user_name', name);
+                localStorage.setItem('chat_user_room', room);
+                startApp();
+            } else alert("Vui lòng điền đầy đủ!");
+        };
+
+        function startApp() {
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('chat-container').classList.remove('hidden');
+            document.getElementById('display-user-name').innerText = userName;
+            document.getElementById('display-user-room').innerText = "Phòng " + userRoom.replace('Group', '');
+            
+            groups.forEach(gid => {
+                const roomTitle = document.getElementById(`room-title-${gid}`);
+                const wrapper = document.getElementById(`input-wrapper-${gid}`);
+                if (gid === userRoom) {
+                    roomTitle.innerText = `${roomTitle.getAttribute('data-original')} - ${userName}`;
+                    roomTitle.classList.add('text-indigo-600');
+                    wrapper.classList.remove('opacity-40', 'pointer-events-none');
+                } else {
+                    wrapper.classList.add('opacity-40', 'pointer-events-none');
+                }
+                startListening(gid);
+            });
+        }
+
+        async function startListening(groupId) {
+            // Lấy tin cũ
+            const { data } = await supabase.from('messages').select('*').eq('group_id', groupId).order('created_at', { ascending: true });
+            if (data) { 
+                messagesState[groupId] = data; 
+                renderFeed(groupId, data); 
+            }
+
+            // Realtime
+            supabase.channel(`room-${groupId}`).on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'messages', 
+                filter: `group_id=eq.${groupId}` 
+            }, payload => {
+                if (!messagesState[groupId].find(m => m.id === payload.new.id)) {
+                    messagesState[groupId].push(payload.new);
+                    renderFeed(groupId, messagesState[groupId]);
+                }
+            }).subscribe();
+        }
+
+        function renderFeed(gid, msgs) {
+            const feed = document.getElementById(`feed-${gid}`);
+            feed.innerHTML = msgs.map(m => {
+                const isMe = m.sender === userName && gid === userRoom;
+                let fileEl = m.file ? (m.file.type.startsWith('image/') ? `<img src="${m.file.data}" class="mt-2 rounded-lg max-h-32 border">` : `<a href="${m.file.data}" download="${m.file.name}" class="block mt-2 p-2 bg-slate-100 rounded text-xs font-bold text-indigo-600">📂 ${m.file.name}</a>`) : '';
+                return `<div class="mb-4 ${isMe ? 'text-right pl-8' : 'text-left pr-8'}"><div class="inline-block px-3 py-2 rounded-2xl border ${isMe ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white text-slate-800 border-slate-100 shadow-sm'}"><p class="text-[9px] font-black opacity-60 uppercase">${m.sender}</p><p class="text-sm font-medium">${m.text || ''}</p>${fileEl}</div></div>`;
+            }).join('');
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        // Tự động vào nếu có cache
+        window.onload = () => { if (userName && userRoom) startApp(); };
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .grid-layout { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); height: 100%; gap: 1px; background-color: #f1f5f9; }
+        @media (max-width: 1024px) { .grid-layout { grid-template-columns: 1fr; grid-template-rows: auto; overflow-y: auto; height: auto; } }
+    </style>
+</head>
+<body class="bg-slate-50 h-screen flex flex-col font-sans overflow-hidden">
+
+    <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-indigo-50/80 backdrop-blur-md p-4">
+        <div class="bg-white p-8 rounded-[3rem] shadow-2xl w-full max-w-sm text-center border border-white">
+            <h1 class="text-3xl font-black text-slate-800 mb-6 italic">e<span class="text-indigo-600 font-black">Chat</span></h1>
+            <input id="name-input" type="text" placeholder="Nhập tên của bạn..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl mb-4 text-center font-bold outline-none focus:ring-4 focus:ring-indigo-100 transition-all">
+            <select id="room-select" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl mb-6 text-center font-bold outline-none appearance-none cursor-pointer">
+                <option value="">-- Chọn phòng chat --</option>
+                <option value="GroupA">eChat A</option>
+                <option value="GroupB">eChat B</option>
+                <option value="GroupC">eChat C</option>
+                <option value="GroupD">eChat D</option>
+            </select>
+            <button onclick="login()" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all">Tham Gia</button>
+        </div>
+    </div>
+
+    <header class="bg-white border-b px-8 py-3 flex justify-between items-center shrink-0 shadow-sm z-10">
+        <h2 class="text-xl font-black italic tracking-tighter">e<span class="text-indigo-600">Chat</span></h2>
+        <div class="text-right flex items-center gap-4">
+            <div class="hidden md:block">
+                <span id="display-user-room" class="text-[10px] font-black text-indigo-500 uppercase block"></span>
+                <span id="display-user-name" class="text-xs font-bold text-slate-700"></span>
+            </div>
+            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs border border-indigo-200">👤</div>
+        </div>
+    </header>
+
+    <div id="chat-container" class="hidden flex-1 overflow-hidden">
+        <div class="grid-layout">
+            <script>
+                const groupNames = {GroupA: 'eChat A', GroupB: 'eChat B', GroupC: 'eChat C', GroupD: 'eChat D'};
+                document.write(Object.keys(groupNames).map(gid => `
+                    <div class="flex flex-col bg-white overflow-hidden">
+                        <div class="px-5 py-3 border-b bg-slate-50/50 backdrop-blur-sm flex justify-between items-center">
+                            <span id="room-title-${gid}" data-original="${groupNames[gid]}" class="text-[10px] font-black uppercase text-slate-400 tracking-widest">${groupNames[gid]}</span>
+                        </div>
+                        <div id="feed-${gid}" class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white flex flex-col">
+                             <div class="m-auto opacity-5 font-black text-4xl italic select-none">eChat</div>
+                        </div>
+                        <div id="input-wrapper-${gid}" class="p-4 border-t bg-slate-50/50 transition-all">
+                            <div id="file-preview-${gid}" class="mb-2 hidden"></div>
+                            <div class="flex gap-2 items-end">
+                                <input type="file" id="file-input-${gid}" class="hidden" onchange="handleFileSelect(event, '${gid}')">
+                                <button onclick="triggerFileInput('${gid}')" class="p-3.5 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-all"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                                <textarea id="input-${gid}" onkeydown="handleKey(event, '${gid}')" rows="1" placeholder="Nhập tin nhắn..." class="flex-1 p-3.5 bg-white border border-slate-200 rounded-2xl outline-none text-sm shadow-sm focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all resize-none font-medium"></textarea>
+                                <button onclick="sendMessage('${gid}')" class="p-4 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-90 transition-all"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+                `).join(''));
+            </script>
+        </div>
+    </div>
+</body>
+</html>

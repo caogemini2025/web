@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LỚP HỌC SỐ - PHIÊN BẢN HIỆN ĐẠI 2026</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --mo-ga: #FEF9E7;
+            --mo-ga-nhat: #FFFDF5;
+            --nau-do: #7C2D12;
+            --cam-dam: #D97706;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--mo-ga);
+            color: var(--nau-do);
+        }
+
+        .sidebar-item {
+            transition: all 0.2s ease;
+            color: #92400E;
+            margin: 0 12px;
+            border-radius: 12px;
+        }
+
+        .sidebar-item.active {
+            background: var(--nau-do);
+            color: white !important;
+        }
+
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .glass-card {
+            background: white;
+            border: 1px solid rgba(124, 45, 18, 0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+        
+        iframe { border: none; width: 100%; height: 100%; border-radius: 20px; }
+    </style>
+</head>
+<body class="h-screen w-full flex overflow-hidden">
+
+    <div id="toast-container" class="fixed top-6 right-6 z-[100]"></div>
+
+    <aside class="w-64 bg-[#FFFDF5] border-r border-orange-100 flex flex-col shrink-0">
+        <div class="h-20 flex items-center px-6 gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#7C2D12] flex items-center justify-center text-white shadow-md">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+                <h1 class="font-black text-sm text-[#7C2D12] leading-none">LỚP HỌC SỐ</h1>
+                <p class="text-[9px] font-bold text-orange-800/50 uppercase tracking-widest mt-1">Hệ sinh thái 4.0</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 py-4 space-y-1 overflow-y-auto">
+            <button onclick="navigate('home')" id="nav-home" class="sidebar-item active w-[calc(100%-24px)] flex items-center p-3">
+                <i class="fa-solid fa-house w-6"></i>
+                <span class="ml-2 font-bold text-sm">Tổng quan</span>
+            </button>
+            <button onclick="navigate('lecture')" id="nav-lecture" class="sidebar-item w-[calc(100%-24px)] flex items-center p-3">
+                <i class="fa-solid fa-desktop w-6"></i>
+                <span class="ml-2 font-bold text-sm">Bài giảng Slide</span>
+            </button>
+            <button onclick="navigate('profile-docs')" id="nav-profile-docs" class="sidebar-item w-[calc(100%-24px)] flex items-center p-3">
+                <i class="fa-solid fa-box-archive w-6"></i>
+                <span class="ml-2 font-bold text-sm">Hồ sơ bài</span>
+            </button>
+            <button onclick="navigate('ai')" id="nav-ai" class="sidebar-item w-[calc(100%-24px)] flex items-center p-3">
+                <i class="fa-solid fa-robot w-6"></i>
+                <span class="ml-2 font-bold text-sm">Trợ lý AI K1</span>
+            </button>
+            
+            <div class="pt-6 pb-2 px-6 text-[10px] font-black text-orange-900/30 uppercase tracking-widest">Tiện ích</div>
+            <button onclick="navigate('learning-materials')" id="nav-learning-materials" class="sidebar-item w-[calc(100%-24px)] flex items-center p-3">
+                <i class="fa-solid fa-book-open w-6"></i>
+                <span class="ml-2 font-bold text-sm">Học liệu số</span>
+            </button>
+            <button onclick="navigate('discussion')" id="nav-discussion" class="sidebar-item w-[calc(100%-24px)] flex items-center p-3">
+                <i class="fa-solid fa-comments w-6"></i>
+                <span class="ml-2 font-bold text-sm">Thảo luận</span>
+            </button>
+            <button onclick="navigate('games')" id="nav-games" class="sidebar-item w-[calc(100%-24px)] flex items-center p-3">
+                <i class="fa-solid fa-gamepad w-6"></i>
+                <span class="ml-2 font-bold text-sm">Trò chơi</span>
+            </button>
+            <button onclick="navigate('quiz')" id="nav-quiz" class="sidebar-item w-[calc(100%-24px)] flex items-center p-3">
+                <i class="fa-solid fa-check-double w-6"></i>
+                <span class="ml-2 font-bold text-sm">Kiểm tra</span>
+            </button>
+        </nav>
+
+        <div class="p-6 border-t border-orange-50">
+            <div class="flex items-center gap-3">
+                <div>
+                    <p class="text-xs font-black text-orange-900 leading-none">TS. Cao Thanh Hùng</p>
+                    <p class="text-[9px] text-orange-700 font-bold mt-1 uppercase">Giảng viên</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0">
+        <header class="h-16 flex items-center justify-between px-8 bg-white/50 border-b border-orange-100 shrink-0">
+            <div class="flex items-center gap-4">
+                <div class="text-xs font-black text-orange-900 uppercase tracking-widest" id="header-title">HỆ SINH THÁI GIẢNG DẠY SỐ</div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-[10px] font-bold text-orange-700 bg-orange-100 px-3 py-1 rounded-full uppercase" id="display-class">Lớp: ---</div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6">
+            
+            <section id="page-home" class="fade-in max-w-4xl mx-auto py-10">
+                <h2 class="text-4xl font-black text-orange-950 mb-8 text-center">THIẾT LẬP PHIÊN GIẢNG</h2>
+                <div class="bg-white p-8 rounded-[40px] shadow-sm border border-orange-50 space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-[10px] font-black text-orange-400 uppercase tracking-widest ml-1">Tên môn học</label>
+                            <input type="text" id="subject-input" placeholder="VD: Xây dựng Đảng..." class="w-full mt-2 px-5 py-4 bg-orange-50 border-none rounded-2xl font-bold outline-none focus:ring-2 focus:ring-orange-200">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-orange-400 uppercase tracking-widest ml-1">Mã lớp</label>
+                            <input type="text" id="class-input" placeholder="VD: T04-L1..." class="w-full mt-2 px-5 py-4 bg-orange-50 border-none rounded-2xl font-bold outline-none focus:ring-2 focus:ring-orange-200">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-orange-400 uppercase tracking-widest ml-1">Link Slide Trình chiếu</label>
+                        <input type="text" id="slide-input" placeholder="Dán link Google Slides..." class="w-full mt-2 px-5 py-4 bg-orange-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-200">
+                    </div>
+                    <button onclick="startSession()" class="w-full py-5 bg-orange-900 text-white rounded-3xl font-black text-lg shadow-xl shadow-orange-900/20 hover:scale-[1.02] active:scale-95 transition-all">
+                        BẮT ĐẦU GIẢNG DẠY
+                    </button>
+                </div>
+            </section>
+
+            <section id="page-profile-docs" class="fade-in hidden max-w-6xl mx-auto">
+                <div class="mb-10 text-center">
+                    <h2 class="text-3xl font-black text-orange-950 uppercase">Hồ sơ bài giảng</h2>
+                    <p class="text-orange-600 font-bold text-xs uppercase tracking-widest mt-2">Quản lý hệ thống hồ sơ nghiệp vụ</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="profile-grid">
+                    </div>
+            </section>
+
+            <section id="page-ai" class="fade-in hidden h-full flex flex-col gap-6">
+                <div class="flex-1 bg-white rounded-[40px] shadow-sm border border-orange-100 overflow-hidden relative">
+                    <iframe src="https://sites.google.com/view/hoclieukhoahocdientu/trang-ch%E1%BB%A7"></iframe>
+                </div>
+                <div class="flex justify-center">
+                    <div class="bg-white p-8 rounded-[40px] shadow-xl border border-orange-50 flex flex-col items-center text-center max-w-sm">
+                        <div class="bg-orange-900 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase mb-4">Mã QR Học Liệu</div>
+                        <div class="p-4 bg-white border-4 border-orange-50 rounded-[32px] shadow-inner">
+                            <img id="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://sites.google.com/view/hoclieukhoahocdientu/trang-ch%E1%BB%A7" class="w-40 h-40">
+                        </div>
+                        <p class="mt-4 text-[11px] font-bold text-orange-800 italic leading-relaxed">Học viên quét mã để truy cập<br>Hệ sinh thái học liệu K1</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-learning-materials" class="fade-in hidden max-w-4xl mx-auto py-20 text-center">
+                <div class="w-24 h-24 bg-orange-100 text-orange-900 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <h2 class="text-3xl font-black text-orange-950 uppercase mb-4">Hệ thống học liệu số</h2>
+                <p class="text-orange-700 font-bold mb-10 italic">Truy cập kho văn bản pháp luật và tư liệu chính thống tại Website Búa Liềm.</p>
+                <a href="https://sites.google.com/view/bualiem" target="_blank" class="inline-block px-12 py-5 bg-orange-900 text-white rounded-3xl font-black text-lg shadow-2xl shadow-orange-900/40 hover:scale-105 transition-all uppercase">
+                    Mở Website Búa Liềm
+                </a>
+            </section>
+
+            <section id="page-discussion" class="fade-in hidden max-w-6xl mx-auto">
+                <div class="mb-10">
+                    <h2 class="text-3xl font-black text-orange-950 uppercase">Phòng thảo luận</h2>
+                    <p class="text-orange-600 font-bold text-xs uppercase tracking-widest mt-1">Nơi trình bày và chia sẻ tư liệu thực tế của học viên</p>
+                </div>
+
+                <div class="mb-12">
+                    <div class="flex items-center gap-3 mb-4">
+                        <i class="fa-solid fa-file-powerpoint text-orange-800"></i>
+                        <h3 class="font-black text-orange-900 uppercase text-sm">Slide báo cáo của học viên</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-[32px] border border-orange-50 shadow-sm mb-4">
+                        <div class="flex gap-4">
+                            <input type="text" id="student-slide-input" placeholder="Dán link Slide thảo luận của nhóm học viên..." class="flex-1 px-5 py-3 bg-orange-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-200 font-medium text-xs">
+                            <button onclick="loadStudentSlide()" class="px-6 py-3 bg-orange-800 text-white rounded-2xl font-black text-[10px] uppercase">Tải Slide</button>
+                        </div>
+                    </div>
+                    <div id="student-slide-container" class="aspect-video w-full bg-orange-50 rounded-[32px] flex items-center justify-center border-2 border-dashed border-orange-200">
+                        <p class="text-orange-300 font-black text-xs uppercase italic">Chưa tải slide thảo luận</p>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <i class="fa-solid fa-clapperboard text-orange-800"></i>
+                        <h3 class="font-black text-orange-900 uppercase text-sm">Clip thực tế do học viên cung cấp</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="glass-card rounded-[32px] overflow-hidden group">
+                            <div class="aspect-video relative">
+                                <img src="https://img.youtube.com/vi/axdL_pfhiQc/0.jpg" class="w-full h-full object-cover">
+                                <a href="https://www.youtube.com/watch?v=axdL_pfhiQc" target="_blank" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white text-3xl">
+                                    <i class="fa-solid fa-play"></i>
+                                </a>
+                            </div>
+                            <div class="p-4"><h4 class="text-[10px] font-black text-orange-950 leading-tight">Mô hình Giải quyết mâu thuẫn - Xã Tịnh Thới</h4></div>
+                        </div>
+                        <div class="glass-card rounded-[32px] overflow-hidden group">
+                            <div class="aspect-video relative">
+                                <img src="https://img.youtube.com/vi/_keN5gl0EoI/0.jpg" class="w-full h-full object-cover">
+                                <a href="https://www.youtube.com/watch?v=_keN5gl0EoI&t=73s" target="_blank" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white text-3xl">
+                                    <i class="fa-solid fa-play"></i>
+                                </a>
+                            </div>
+                            <div class="p-4"><h4 class="text-[10px] font-black text-orange-950 leading-tight">Mô hình Tiếng kẻng an ninh - Xã Lương Sơn</h4></div>
+                        </div>
+                        <div class="glass-card rounded-[32px] overflow-hidden group">
+                            <div class="aspect-video relative">
+                                <img src="https://img.youtube.com/vi/RbrZoOSvqmg/0.jpg" class="w-full h-full object-cover">
+                                <a href="https://www.youtube.com/watch?v=RbrZoOSvqmg" target="_blank" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-white text-3xl">
+                                    <i class="fa-solid fa-play"></i>
+                                </a>
+                            </div>
+                            <div class="p-4"><h4 class="text-[10px] font-black text-orange-950 leading-tight">Mô hình bảo đảm an ninh trật tự - Xã Tân Hưng</h4></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-games" class="fade-in hidden max-w-5xl mx-auto text-center py-10">
+                <h2 class="text-3xl font-black text-orange-950 uppercase mb-12">Kho trò chơi trí tuệ</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 px-10">
+                    <div class="bg-white p-10 rounded-[50px] shadow-xl border-t-8 border-red-600">
+                        <div class="w-20 h-20 bg-red-100 text-red-600 rounded-3xl flex items-center justify-center text-3xl mx-auto mb-6">
+                            <i class="fa-solid fa-puzzle-piece"></i>
+                        </div>
+                        <h3 class="text-xl font-black text-orange-950 mb-3 uppercase">Mảnh ghép số</h3>
+                        <button onclick="window.open('mang_ghep_so.html', '_blank')" class="px-8 py-3 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase">Bắt đầu chơi</button>
+                    </div>
+                    <div class="bg-white p-10 rounded-[50px] shadow-xl border-t-8 border-blue-600">
+                        <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center text-3xl mx-auto mb-6">
+                            <i class="fa-solid fa-sync"></i>
+                        </div>
+                        <h3 class="text-xl font-black text-orange-950 mb-3 uppercase">Vòng quay tri thức</h3>
+                        <button onclick="window.open('vong_quay_tri_thuc.html', '_blank')" class="px-8 py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase">Bắt đầu quay</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-lecture" class="fade-in hidden h-full">
+                <div class="h-full rounded-[40px] overflow-hidden bg-white shadow-sm border border-orange-50" id="slide-container">
+                    <div class="h-full flex flex-col items-center justify-center text-orange-200">
+                        <i class="fa-solid fa-desktop text-6xl mb-4"></i>
+                        <p class="font-black tracking-widest uppercase">Chưa tải dữ liệu slide</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const pages = ['home', 'lecture', 'profile-docs', 'ai', 'learning-materials', 'discussion', 'games', 'quiz'];
+        const profileTaps = [
+            "TAP 1 - QUYẾT ĐỊNH HỒ SƠ BÀI",
+            "TAP 2 - CHƯƠNG TRÌNH",
+            "TAP 3 - KẾ HOẠCH",
+            "TAP 4 - GIÁO ÁN",
+            "TAP 5 - NGOẠI KHÓA",
+            "TAP 6 - CÂU HỎI SEMINAR",
+            "TAP 7 - NGÂN HÀNG CÂU HỎI",
+            "TAP 8 - CÔNG CỤ LƯU TRỮ"
+        ];
+
+        function navigate(pageId) {
+            pages.forEach(p => {
+                const el = document.getElementById(`page-${p}`);
+                const nav = document.getElementById(`nav-${p}`);
+                if(el) el.classList.add('hidden');
+                if(nav) nav.classList.remove('active');
+            });
+            const target = document.getElementById(`page-${pageId}`);
+            if(target) target.classList.remove('hidden');
+            const navTarget = document.getElementById(`nav-${pageId}`);
+            if(navTarget) navTarget.classList.add('active');
+        }
+
+        // Khởi tạo Hồ sơ bài và cơ chế lưu link tự động
+        const profileGrid = document.getElementById('profile-grid');
+        profileTaps.forEach((title, idx) => {
+            const tapId = idx + 1;
+            const savedLink = localStorage.getItem(`profile_tap_${tapId}`) || "";
+            const div = document.createElement('div');
+            div.className = "bg-white p-6 rounded-[32px] border border-orange-50 shadow-sm flex flex-col items-center text-center";
+            div.innerHTML = `
+                <div class="w-10 h-10 rounded-2xl bg-orange-100 text-orange-900 flex items-center justify-center font-black mb-4">${tapId}</div>
+                <h4 class="text-[9px] font-black text-orange-950 uppercase mb-4 h-8 flex items-center">${title}</h4>
+                <input type="text" id="input-tap-${tapId}" value="${savedLink}" 
+                    onchange="saveProfileLink(${tapId}, this.value)"
+                    placeholder="Dán link hồ sơ..." 
+                    class="w-full text-[10px] px-4 py-3 bg-orange-50 border-none rounded-xl outline-none mb-3 font-medium">
+                <button onclick="openProfileLink(${tapId})" class="w-full py-2 bg-orange-900 text-white text-[10px] font-black rounded-xl uppercase">Mở hồ sơ</button>
+            `;
+            profileGrid.appendChild(div);
+        });
+
+        function saveProfileLink(id, value) {
+            localStorage.setItem(`profile_tap_${id}`, value);
+            showToast(`Đã lưu link Tập ${id}`);
+        }
+
+        function openProfileLink(id) {
+            const link = document.getElementById(`input-tap-${id}`).value.trim();
+            if(link) window.open(link, '_blank');
+            else showToast(`Vui lòng nhập link trước!`);
+        }
+
+        // Thảo luận: Tải Slide của học viên
+        function loadStudentSlide() {
+            const link = document.getElementById('student-slide-input').value.trim();
+            if(link) {
+                document.getElementById('student-slide-container').innerHTML = `<iframe src="${link}" class="w-full h-full" allowfullscreen></iframe>`;
+                showToast("Đã tải slide thảo luận của học viên!");
+            } else {
+                showToast("Vui lòng dán link slide!");
+            }
+        }
+
+        function startSession() {
+            const subject = document.getElementById('subject-input').value || "BÀI GIẢNG MỚI";
+            const className = document.getElementById('class-input').value || "LỚP T04";
+            const slideLink = document.getElementById('slide-input').value.trim();
+            document.getElementById('header-title').textContent = subject;
+            document.getElementById('display-class').textContent = "Lớp: " + className;
+            if(slideLink) document.getElementById('slide-container').innerHTML = `<iframe src="${slideLink}" class="w-full h-full" allowfullscreen></iframe>`;
+            navigate('lecture');
+            showToast("Tiết học đã sẵn sàng!");
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = "fade-in bg-white border-l-4 border-orange-950 p-4 rounded-xl shadow-2xl font-bold text-xs text-orange-950 mb-2";
+            t.textContent = msg;
+            container.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
