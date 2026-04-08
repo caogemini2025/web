@@ -8,12 +8,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/dflip@2.2.26/css/dflip.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/dflip@2.2.26/css/themify-icons.min.css" rel="stylesheet">
     
     <script>
-        // Chỉ định đường dẫn gốc để không bao giờ bị lỗi màn hình đen tìm file
         var dFlipLocation = "https://cdn.jsdelivr.net/npm/dflip@2.2.26/";
     </script>
     <script src="https://cdn.jsdelivr.net/npm/dflip@2.2.26/js/dflip.min.js"></script>
@@ -24,6 +25,10 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--mo-ga); color: var(--nau-do); }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Tùy chỉnh thanh cuộn cho danh sách file */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #fbd38d; border-radius: 4px; }
     </style>
 </head>
 <body class="w-full min-h-screen overflow-x-hidden flex flex-col">
@@ -34,7 +39,7 @@
         <div class="h-16 flex justify-between items-center px-4 md:px-6 bg-black text-white shrink-0 shadow-lg border-b border-gray-800">
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-book-open text-orange-500 text-xl"></i>
-                <h3 class="text-xs md:text-sm font-black tracking-widest uppercase text-white">Tài liệu học tập - TS. Cao Thanh Hùng</h3>
+                <h3 class="text-xs md:text-sm font-black tracking-widest uppercase text-white" id="modal-title">Ebook 3D</h3>
             </div>
             <div class="flex gap-3 items-center">
                 <button id="fallback-btn" class="bg-gray-800 hover:bg-gray-700 text-white px-3 md:px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold transition-all border border-gray-600">
@@ -51,72 +56,197 @@
     <header class="h-16 flex items-center justify-center px-8 bg-white/50 border-b border-orange-100 shrink-0">
         <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-lg bg-[#7C2D12] flex items-center justify-center text-white shadow-md">
-                <i class="fa-solid fa-box-archive text-sm"></i>
+                <i class="fa-solid fa-cloud text-sm"></i>
             </div>
-            <div class="text-sm font-black text-orange-900 uppercase tracking-widest">HỆ THỐNG QUẢN LÝ HỒ SƠ NGHIỆP VỤ</div>
+            <div class="text-sm font-black text-orange-900 uppercase tracking-widest">HỆ THỐNG LƯU TRỮ HỒ SƠ CLOUD</div>
         </div>
     </header>
 
     <main class="flex-1 overflow-y-auto p-6 md:p-10">
         <section class="fade-in max-w-7xl mx-auto">
-            <div class="mb-12 text-center">
+            <div class="mb-12 text-center relative">
                 <h2 class="text-3xl md:text-4xl font-black text-orange-950 uppercase">Hồ sơ bài giảng</h2>
                 <p class="text-orange-600 font-bold text-xs md:text-sm uppercase tracking-widest mt-3">Giảng viên: Thiếu tá, TS. Cao Thanh Hùng</p>
+                
+                <button onclick="addNewCategory()" class="mt-6 inline-flex items-center gap-2 bg-orange-900 text-white px-6 py-3 rounded-full text-xs font-bold hover:bg-orange-800 transition-all shadow-lg">
+                    <i class="fa-solid fa-folder-plus"></i> THÊM TẬP HỒ SƠ MỚI
+                </button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8" id="profile-grid"></div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8" id="profile-grid">
+                </div>
         </section>
     </main>
 
     <script>
-        const profileTaps = [
+        // --- 1. CẤU HÌNH SUPABASE ---
+        const SB_URL = "https://iatarpzwbpmvxafkuhvh.supabase.co"; 
+        const SB_KEY = "sb_publishable_L8zkZyosiIUfXbznifDV5g_Stvlxt_O"; 
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+        // --- 2. QUẢN LÝ DANH MỤC HỒ SƠ ---
+        const defaultCategories = [
             "TẬP 1 - QUYẾT ĐỊNH HỒ SƠ BÀI", "TẬP 2 - CHƯƠNG TRÌNH", "TẬP 3 - KẾ HOẠCH", "TẬP 4 - GIÁO ÁN",
             "TẬP 5 - NGOẠI KHÓA", "TẬP 6 - CÂU HỎI SEMINAR", "TẬP 7 - NGÂN HÀNG CÂU HỎI", "TẬP 8 - CÔNG CỤ LƯU TRỮ"
         ];
+        let categories = JSON.parse(localStorage.getItem('my_categories')) || defaultCategories;
+        let allDocuments = []; 
 
-        const profileGrid = document.getElementById('profile-grid');
-        
-        profileTaps.forEach((title, idx) => {
-            const tapId = idx + 1;
-            const savedLink = localStorage.getItem(`profile_tap_${tapId}`) || "";
+        window.onload = loadDataFromSupabase;
+
+        async function loadDataFromSupabase() {
+            const { data, error } = await supabaseClient.from('ho_so_nghiep_vu').select('*').order('id', { ascending: true });
             
-            const div = document.createElement('div');
-            div.className = "bg-white p-6 md:p-8 rounded-[32px] border border-orange-50 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center group hover:-translate-y-1";
-            div.innerHTML = `
-                <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-900 flex items-center justify-center font-black text-xl mb-5 group-hover:bg-orange-900 group-hover:text-white transition-colors">${tapId}</div>
-                <h4 class="text-[11px] md:text-xs font-black text-orange-950 uppercase mb-5 h-10 flex items-center justify-center leading-relaxed">${title}</h4>
-                <input type="text" id="input-tap-${tapId}" value="${savedLink}" 
-                    onchange="saveProfileLink(${tapId}, this.value)"
-                    placeholder="Dán link (Google Drive hoặc Github)..." 
-                    class="w-full text-xs px-5 py-4 bg-orange-50/50 border border-orange-100 rounded-xl outline-none mb-4 font-medium focus:ring-2 focus:ring-orange-200 transition-all">
-                <button onclick="openProfileLink(${tapId})" class="w-full py-3.5 bg-orange-900 text-white text-[11px] font-black rounded-xl uppercase hover:bg-orange-800 active:scale-95 transition-all shadow-md">Mở tài liệu</button>
-            `;
-            profileGrid.appendChild(div);
-        });
-
-        function saveProfileLink(id, value) {
-            localStorage.setItem(`profile_tap_${id}`, value);
-            showToast(`Đã lưu tự động link Tập ${id}`);
-        }
-
-        function openProfileLink(id) {
-            const link = document.getElementById(`input-tap-${id}`).value.trim();
-            if(!link) {
-                showToast(`Vui lòng dán link file vào ô trống trước!`);
+            if (error) {
+                showToast("Lỗi kết nối Supabase! Vui lòng kiểm tra lại bảng dữ liệu.");
+                console.error(error);
                 return;
             }
+            
+            allDocuments = data || [];
+            renderGrid();
+        }
 
+        // --- 3. VẼ GIAO DIỆN CÁC TẬP HỒ SƠ ---
+        function renderGrid() {
+            const grid = document.getElementById('profile-grid');
+            grid.innerHTML = '';
+
+            categories.forEach((catName, idx) => {
+                const filesInCat = allDocuments.filter(doc => doc.loai_ho_so === catName);
+                
+                let filesHTML = '';
+                if (filesInCat.length === 0) {
+                    filesHTML = `<p class="text-[10px] text-gray-400 italic text-center py-4">Chưa có tài liệu nào</p>`;
+                } else {
+                    filesInCat.forEach((file, index) => {
+                        filesHTML += `
+                            <div class="flex items-center justify-between bg-orange-50/80 p-2.5 rounded-lg mb-2 border border-orange-100 group">
+                                <div class="flex items-center gap-2 overflow-hidden cursor-pointer w-full" onclick="openFile('${file.link_file}', '${file.ten_van_ban}')">
+                                    <i class="fa-solid fa-file-pdf text-red-500"></i>
+                                    <span class="text-xs font-semibold text-orange-900 truncate" title="${file.ten_van_ban}">${index + 1}. ${file.ten_van_ban}</span>
+                                </div>
+                                <button onclick="deleteFile(${file.id})" class="text-red-400 hover:text-red-600 px-2 opacity-0 group-hover:opacity-100 transition-opacity" title="Xóa file này">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                }
+
+                const div = document.createElement('div');
+                div.className = "bg-white p-5 rounded-[32px] border border-orange-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-[400px]";
+                div.innerHTML = `
+                    <div class="relative text-center mb-4 border-b border-orange-50 pb-3">
+                        <button onclick="deleteCategory('${catName}')" class="absolute top-0 right-0 text-red-300 hover:text-red-600 transition-colors" title="Xóa toàn bộ Tập này">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                        
+                        <div class="w-10 h-10 mx-auto rounded-xl bg-orange-100 text-orange-900 flex items-center justify-center font-black text-sm mb-3 mt-2">${idx + 1}</div>
+                        <h4 class="text-[11px] font-black text-orange-950 uppercase leading-relaxed line-clamp-2" title="${catName}">${catName}</h4>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto custom-scrollbar pr-1 mb-4">
+                        ${filesHTML}
+                    </div>
+
+                    <div class="mt-auto bg-gray-50 p-3 rounded-xl border border-gray-100">
+                        <input type="text" id="name-${idx}" placeholder="Nhập tên văn bản..." class="w-full text-[10px] px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none mb-2 focus:ring-1 focus:ring-orange-300">
+                        <input type="text" id="link-${idx}" placeholder="Dán link PDF/Drive..." class="w-full text-[10px] px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none mb-2 focus:ring-1 focus:ring-orange-300">
+                        <button onclick="saveNewFile('${catName}', ${idx})" class="w-full py-2 bg-orange-900 text-white text-[10px] font-bold rounded-lg hover:bg-orange-800 transition-all flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-plus"></i> THÊM TÀI LIỆU
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // --- 4. CÁC HÀM XỬ LÝ DỮ LIỆU ---
+
+        function addNewCategory() {
+            const newCat = prompt("Nhập tên Tập hồ sơ mới (VD: TẬP 9 - KIỂM TRA):");
+            if (newCat && newCat.trim() !== "") {
+                categories.push(newCat.trim().toUpperCase());
+                localStorage.setItem('my_categories', JSON.stringify(categories));
+                renderGrid();
+                showToast("Đã thêm loại hồ sơ mới!");
+            }
+        }
+
+        // CHỨC NĂNG MỚI: Xóa Tập hồ sơ
+        async function deleteCategory(catName) {
+            const isConfirm = confirm(`Anh có chắc chắn muốn XÓA TOÀN BỘ "${catName}" và TẤT CẢ TÀI LIỆU bên trong không? Hành động này không thể hoàn tác!`);
+            
+            if (isConfirm) {
+                // 1. Xóa tất cả file thuộc tập này trên Supabase (nếu có)
+                const { error } = await supabaseClient.from('ho_so_nghiep_vu').delete().eq('loai_ho_so', catName);
+                
+                if (error) {
+                    showToast("Lỗi khi xóa tài liệu trên cơ sở dữ liệu!");
+                    console.error(error);
+                } else {
+                    // 2. Cập nhật lại mảng dữ liệu đang hiển thị
+                    allDocuments = allDocuments.filter(doc => doc.loai_ho_so !== catName);
+                    
+                    // 3. Xóa tên tập khỏi danh sách categories lưu trong máy
+                    categories = categories.filter(c => c !== catName);
+                    localStorage.setItem('my_categories', JSON.stringify(categories));
+                    
+                    renderGrid();
+                    showToast(`Đã xóa thành công ${catName}!`);
+                }
+            }
+        }
+
+        async function saveNewFile(catName, idx) {
+            const docName = document.getElementById(`name-${idx}`).value.trim();
+            const docLink = document.getElementById(`link-${idx}`).value.trim();
+
+            if (!docName || !docLink) {
+                return showToast("Vui lòng nhập đủ Tên văn bản và Link!");
+            }
+
+            const { data, error } = await supabaseClient.from('ho_so_nghiep_vu').insert([
+                { ten_van_ban: docName, loai_ho_so: catName, link_file: docLink }
+            ]).select();
+
+            if (error) {
+                console.error(error);
+                showToast("Lỗi khi thêm file!");
+            } else {
+                showToast("Đã lưu file thành công!");
+                allDocuments.push(data[0]);
+                renderGrid();
+            }
+        }
+
+        async function deleteFile(id) {
+            if (confirm("Anh có chắc chắn muốn xóa tài liệu này không?")) {
+                const { error } = await supabaseClient.from('ho_so_nghiep_vu').delete().eq('id', id);
+                if (error) {
+                    showToast("Lỗi khi xóa file!");
+                } else {
+                    showToast("Đã xóa tài liệu!");
+                    allDocuments = allDocuments.filter(doc => doc.id !== id);
+                    renderGrid();
+                }
+            }
+        }
+
+        // --- 5. LẬT SÁCH 3D ---
+        function openFile(link, title) {
             const finalLink = link.startsWith('http') ? link : 'https://' + link;
+            document.getElementById('modal-title').innerText = title; 
             
             document.getElementById('flipbook-modal').classList.remove('hidden');
             document.body.style.overflow = 'hidden'; 
             document.getElementById('fallback-btn').onclick = () => window.open(finalLink, '_blank');
 
             const wrapper = document.getElementById('flipbook-wrapper');
-            wrapper.innerHTML = ''; // Làm sạch bộ nhớ
+            wrapper.innerHTML = ''; 
 
-            // THUẬT TOÁN ĐỊNH TUYẾN THÔNG MINH
             if (finalLink.includes('drive.google.com')) {
-                // NẾU LÀ GOOGLE DRIVE -> Mở dạng Viewer nhúng (Chắc chắn 100% xem được)
                 let embedLink = finalLink;
                 if (finalLink.includes('/view')) {
                     embedLink = finalLink.replace('/view', '/preview');
@@ -127,22 +257,16 @@
                     }
                 }
                 wrapper.innerHTML = `<iframe src="${embedLink}" class="w-full h-full border-none"></iframe>`;
-                showToast("Đang mở file từ Google Drive...");
                 
             } else {
-                // NẾU LÀ GITHUB HOẶC NGUỒN KHÁC -> Mở lật sách 3D
                 wrapper.innerHTML = '<div id="flipbook-container" class="w-full h-full"></div>';
-                
                 try {
-                    $('#flipbook-container').DFlip({
-                        source: finalLink,
-                        webgl: false, // TẮT WEBGL ĐỂ KHÔNG BỊ LỖI MÀN HÌNH ĐEN TRÊN MÁY LAPTOP YẾU
+                    $('#flipbook-container').flipBook(finalLink, {
+                        webgl: true, 
                         height: '100%',
                         backgroundColor: '#1f2022'
                     });
-                    showToast("Đang tạo sách 3D...");
                 } catch(e) {
-                    // Nếu lật sách lỗi, tự động nhúng iframe dự phòng
                     wrapper.innerHTML = `<iframe src="${finalLink}" class="w-full h-full border-none"></iframe>`;
                 }
             }
@@ -151,7 +275,7 @@
         function closeFlipbook() {
             document.getElementById('flipbook-modal').classList.add('hidden');
             document.body.style.overflow = 'auto'; 
-            document.getElementById('flipbook-wrapper').innerHTML = ''; // Xóa sạch để giải phóng RAM
+            document.getElementById('flipbook-wrapper').innerHTML = ''; 
         }
 
         function showToast(msg) {
