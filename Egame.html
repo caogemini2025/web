@@ -2,13 +2,11 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Egame Pro v6.0 (3D Digital) - TS. Cao Thanh Hùng</title>
+    <title>Egame - V1.0 - TS. Cao Thanh Hùng</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap');
-
         :root { 
             --ka-red: #ff3366; --ka-blue: #00f3ff; --ka-yellow: #ffde00; --ka-green: #00ff66; 
             --bg-dark: #0a0b10; --panel-bg: rgba(20, 22, 35, 0.85); --glass-border: rgba(0, 243, 255, 0.3);
@@ -16,19 +14,19 @@
         }
         
         body { 
-            font-family: 'Rajdhani', sans-serif; 
+            font-family: Arial, sans-serif; 
             background: radial-gradient(circle at center, #1b1e32 0%, var(--bg-dark) 100%);
             background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
             background-size: 30px 30px;
             color: #fff; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
 
-        h1, h2, h3, .pin-number { font-family: 'Orbitron', sans-serif; text-transform: uppercase; }
+        h1, h2, h3, .pin-number { font-family: 'Times New Roman', serif; text-transform: uppercase; }
 
         .container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 1; }
         .main-layout { display: flex; width: 95%; max-width: 1400px; gap: 25px; height: 85vh; }
         
-        /* Glassmorphism 3D Panels */
+        /* Glassmorphism Panels */
         .glass-panel {
             background: var(--panel-bg); backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border); border-radius: 20px;
@@ -44,13 +42,13 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .giant-pin-card { padding: 40px; border-radius: 20px; width: 80%; max-width: 600px; text-align: center; }
-        .pin-number { font-size: 6.5rem; font-weight: 900; color: var(--ka-blue); text-shadow: var(--text-glow); letter-spacing: 15px; margin: 20px 0; border: 2px dashed var(--ka-blue); padding: 15px; border-radius: 15px; background: rgba(0,0,0,0.5); }
+        .pin-number { font-size: 6.5rem; font-weight: bold; color: var(--ka-blue); letter-spacing: 15px; margin: 20px 0; border: 2px dashed var(--ka-blue); padding: 15px; border-radius: 15px; background: rgba(0,0,0,0.5); }
 
         .grid-kahoot { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 25px; }
         
         /* 3D Buttons */
         .ka-btn { 
-            padding: 25px 15px; border: none; border-radius: 12px; cursor: pointer; font-size: 1.5rem; font-family: 'Rajdhani', sans-serif; font-weight: bold; color: white; min-height: 120px; transition: all 0.1s; position: relative; top: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            padding: 25px 15px; border: none; border-radius: 12px; cursor: pointer; font-size: 1.5rem; font-family: Arial, sans-serif; font-weight: bold; color: white; min-height: 120px; transition: all 0.1s; position: relative; top: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
         .ka-btn:active:not(:disabled) { top: 6px; box-shadow: none !important; }
         .red { background: linear-gradient(145deg, #ff4d79, var(--ka-red)); box-shadow: 0 8px 0 #cc0033, 0 15px 20px rgba(255,51,102,0.4); } 
@@ -60,7 +58,7 @@
         
         /* Digital Timer */
         .timer-circle { 
-            width: 90px; height: 90px; border: 4px solid var(--ka-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 15px; font-weight: bold; font-family: 'Orbitron', sans-serif; box-shadow: 0 0 15px var(--ka-blue), inset 0 0 15px var(--ka-blue); color: var(--ka-blue); text-shadow: var(--text-glow);
+            width: 90px; height: 90px; border: 4px solid var(--ka-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 15px; font-weight: bold; font-family: 'Times New Roman', serif; box-shadow: 0 0 15px var(--ka-blue), inset 0 0 15px var(--ka-blue); color: var(--ka-blue); text-shadow: var(--text-glow);
         }
         
         .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.3rem; }
@@ -72,24 +70,14 @@
 
         /* Input 3D style */
         input[type="text"], input[type="file"] {
-            background: rgba(0,0,0,0.5); border: 1px solid var(--ka-blue); color: #fff; border-radius: 8px; font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;
+            background: rgba(0,0,0,0.5); border: 1px solid var(--ka-blue); color: #fff; border-radius: 8px; font-family: Arial, sans-serif; font-size: 1.2rem;
         }
         input[type="text"]:focus { outline: none; box-shadow: 0 0 10px var(--ka-blue); }
         
         .btn-3d {
-            background: linear-gradient(145deg, #00f3ff, #0088cc); color: #000; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; font-family: 'Orbitron', sans-serif; box-shadow: 0 6px 0 #006699; transition: 0.1s;
+            background: linear-gradient(145deg, #00f3ff, #0088cc); color: #000; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; font-family: 'Times New Roman', serif; box-shadow: 0 6px 0 #006699; transition: 0.1s;
         }
         .btn-3d:active { transform: translateY(6px); box-shadow: none; }
-
-        /* Podium 3D cho vinh danh */
-        .podium-container { display: flex; align-items: flex-end; justify-content: center; gap: 20px; margin: 40px 0; height: 250px; }
-        .podium-step { display: flex; flex-direction: column; align-items: center; width: 120px; }
-        .podium-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 10px #fff; text-align: center; white-space: nowrap; }
-        .podium-score { font-size: 1.2rem; color: var(--ka-yellow); margin-bottom: 5px; }
-        .step-block { width: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; color: rgba(0,0,0,0.5); border-radius: 10px 10px 0 0; box-shadow: inset 0 0 20px rgba(255,255,255,0.5); }
-        .step-1 { height: 180px; background: linear-gradient(180deg, #ffde00, #b39b00); border-top: 5px solid #fff; }
-        .step-2 { height: 130px; background: linear-gradient(180deg, #c0c0c0, #808080); border-top: 5px solid #fff; }
-        .step-3 { height: 90px; background: linear-gradient(180deg, #cd7f32, #8b5a2b); border-top: 5px solid #fff; }
 
         /* Nút Audio Floating */
         .audio-btn {
@@ -100,6 +88,59 @@
             display: flex; align-items: center; justify-content: center; transition: 0.2s;
         }
         .audio-btn:hover { background: rgba(0,243,255,0.4); transform: scale(1.1); }
+
+        /* Podium 3D Không gian có chiều sâu */
+        .podium-stage {
+            display: flex; justify-content: center; align-items: flex-end;
+            gap: 20px; height: 350px; margin: 50px auto; width: 80%;
+            perspective: 1000px; /* Tạo chiều sâu không gian 3D */
+            position: relative;
+        }
+        
+        /* Hiệu ứng sàn sân khấu */
+        .podium-stage::before {
+            content: ''; position: absolute; bottom: -30px; left: -10%; right: -10%; height: 100px;
+            background: radial-gradient(ellipse at center, rgba(0,243,255,0.3) 0%, transparent 70%);
+            transform: rotateX(70deg); z-index: 0;
+        }
+
+        .podium-step {
+            display: flex; flex-direction: column; align-items: center; width: 150px;
+            transform-style: preserve-3d;
+            transform: rotateX(15deg); /* Nghiêng bục ra phía sau để thấy mặt trên */
+            z-index: 1;
+        }
+
+        .podium-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; text-shadow: 0 0 10px #fff; text-align: center; white-space: nowrap; transform: translateZ(20px); }
+        .podium-score { font-size: 1.2rem; color: var(--ka-yellow); margin-bottom: 15px; transform: translateZ(20px); }
+        
+        /* Tạo hình khối 3D cho bục đứng */
+        .step-block { 
+            width: 100%; display: flex; align-items: center; justify-content: center; 
+            font-size: 4rem; font-family: 'Times New Roman', serif; font-weight: bold; color: rgba(0,0,0,0.6); 
+            position: relative;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.3);
+        }
+        
+        /* Mặt trên của bục (Depth) */
+        .step-block::before {
+            content: ''; position: absolute; top: -30px; left: 0; width: 100%; height: 30px;
+            background: inherit; filter: brightness(1.3);
+            transform-origin: bottom; transform: rotateX(70deg);
+            border-top: 1px solid rgba(255,255,255,0.8);
+        }
+        
+        /* Mặt bên hông của bục (Depth) */
+        .step-block::after {
+            content: ''; position: absolute; top: 0; right: -20px; width: 20px; height: 100%;
+            background: inherit; filter: brightness(0.7);
+            transform-origin: left; transform: rotateY(70deg);
+        }
+
+        .step-1 { height: 200px; background: linear-gradient(180deg, #ffde00, #b39b00); }
+        .step-2 { height: 140px; background: linear-gradient(180deg, #e0e0e0, #808080); }
+        .step-3 { height: 90px; background: linear-gradient(180deg, #cd7f32, #8b5a2b); }
+
     </style>
 </head>
 <body>
@@ -109,18 +150,18 @@
 <div class="container">
     <div id="setup-screen" class="screen active">
         <div class="glass-panel" style="padding: 40px; width: 500px; position: relative;">
-            <h1 style="color:var(--ka-blue); margin-top:0; text-shadow: var(--text-glow); font-size: 2.5rem;">EGAME PRO v6.0</h1>
+            <h1 style="color:var(--ka-blue); margin-top:0; text-shadow: var(--text-glow); font-size: 2.5rem;">EGAME - V1.0</h1>
             <p style="color: #aaa; margin-top: -15px;">DIGITAL TRANSFORMATION EDITION</p>
             
             <div id="host-part" style="text-align: left; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
-                <p style="margin-top:0; color: var(--ka-green); font-size: 1.2rem;"><b><span style="font-family:'Orbitron'">[HOST]</span> GIẢNG VIÊN</b></p>
+                <p style="margin-top:0; color: var(--ka-green); font-size: 1.2rem;"><b><span style="font-family:'Times New Roman', serif;">[HOST]</span> GIẢNG VIÊN</b></p>
                 <input type="text" id="class-name" placeholder="Tên lớp..." style="width:94%; padding:12px; margin-bottom:15px;">
                 <input type="file" id="upload-excel" accept=".xlsx" style="width:94%; margin-bottom:20px; padding: 10px;">
                 <button class="btn-3d" onclick="createRoom()" style="width:100%;">MỞ PHÒNG HỌC</button>
             </div>
             <hr style="margin: 25px 0; border-color: rgba(255,255,255,0.1);">
             <div id="player-part" style="text-align: left; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
-                <p style="margin-top:0; color: var(--ka-yellow); font-size: 1.2rem;"><b><span style="font-family:'Orbitron'">[PLAYER]</span> SINH VIÊN</b></p>
+                <p style="margin-top:0; color: var(--ka-yellow); font-size: 1.2rem;"><b><span style="font-family:'Times New Roman', serif;">[PLAYER]</span> NGƯỜI CHƠI</b></p>
                 <input type="text" id="input-pin" placeholder="Mã PIN..." style="width:94%; padding:12px; margin-bottom:15px;">
                 <input type="text" id="user-name" placeholder="Họ và tên..." style="width:94%; padding:12px; margin-bottom:20px;">
                 <button class="btn-3d" onclick="joinGame()" style="width:100%; background: linear-gradient(145deg, #33ff85, #00cc44); box-shadow: 0 6px 0 #009933;">VÀO THI</button>
@@ -136,9 +177,9 @@
         <div class="glass-panel giant-pin-card">
             <h2 id="lobby-class-name" style="margin:0; color:var(--ka-blue);">LỚP ĐANG CHỜ...</h2>
             <div class="pin-number" id="display-pin">000000</div>
-            <div id="player-count" style="font-size: 2rem; font-weight: bold; color: var(--ka-green); font-family: 'Orbitron'; text-shadow: 0 0 10px var(--ka-green);">0 SV ONLINE</div>
+            <div id="player-count" style="font-size: 2rem; font-weight: bold; color: var(--ka-green); font-family: 'Times New Roman', serif; text-shadow: 0 0 10px var(--ka-green);">0 NGƯỜI CHƠI ONLINE</div>
             <br><br>
-            <button id="start-btn" class="btn-3d" onclick="startGameNow()" style="padding:20px 60px; font-size:1.8rem; display:none;">BẮT ĐẦU CHIẾN DỊCH</button>
+            <button id="start-btn" class="btn-3d" onclick="startGameNow()" style="padding:20px 60px; font-size:1.8rem; display:none;">BẮT ĐẦU</button>
         </div>
     </div>
 
@@ -146,7 +187,7 @@
         <div class="main-layout">
             <div class="glass-panel game-area">
                 <div class="timer-circle" id="timer">20</div>
-                <h2 id="question-text" style="font-size: 2.2rem; text-align: center; text-shadow: 2px 2px 4px #000;">Đang tải dữ liệu không gian...</h2>
+                <h2 id="question-text" style="font-size: 2.2rem; text-align: center; text-shadow: 2px 2px 4px #000;">Đang tải câu hỏi...</h2>
                 <div class="grid-kahoot" id="ans-buttons">
                     <button class="ka-btn red" id="btn-0" onclick="submitAns(0)">▲ <span id="txt-0"></span></button>
                     <button class="ka-btn blue" id="btn-1" onclick="submitAns(1)">◆ <span id="txt-1"></span></button>
@@ -156,16 +197,16 @@
                 
                 <div id="host-only-controls" class="host-controls" style="display:none;">
                     <div id="host-current-ans" style="background: rgba(0,243,255,0.2); border: 1px solid var(--ka-blue); padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none;">
-                        <span style="color: var(--ka-blue); font-family: 'Orbitron';">ĐÁP ÁN CÂU HIỆN TẠI:</span> 
-                        <span id="correct-ans-live" style="font-weight:bold; font-size:1.5rem; display:block; margin-top:5px;"></span>
+                        <span style="color: var(--ka-blue); font-family: 'Times New Roman', serif; font-weight: bold;">ĐÁP ÁN ĐÚNG CỦA CÂU NÀY LÀ:</span> 
+                        <span id="correct-ans-live" style="font-weight:bold; font-size:1.5rem; display:block; margin-top:5px; color: white;"></span>
                     </div>
                     
                     <p id="correct-ans-display" style="font-weight:bold; color:var(--ka-green); font-size:1.2rem; margin-bottom: 15px;"></p>
                     <button class="btn-3d" onclick="nextQuestion()" style="width: 100%; background: linear-gradient(145deg, #ffde00, #cca300); box-shadow: 0 6px 0 #997a00; color:#000;">PHÁT CÂU TIẾP THEO >></button>
                 </div>
                 
-                <div id="my-stats" style="display:none;">ĐẶC VỤ: <span id="stat-name"></span> | ĐIỂM SỐ: <span id="stat-score">0</span></div>
-                <div id="player-feedback" style="margin-top:20px; font-weight:900; font-size:2rem; font-family: 'Orbitron'; text-shadow: 2px 2px 5px rgba(0,0,0,0.8);"></div>
+                <div id="my-stats" style="display:none;">NGƯỜI CHƠI: <span id="stat-name"></span> | ĐIỂM SỐ: <span id="stat-score">0</span></div>
+                <div id="player-feedback" style="margin-top:20px; font-weight:bold; font-size:2.5rem; font-family: Arial, sans-serif; height: 50px;"></div>
             </div>
             
             <div class="glass-panel sidebar">
@@ -176,9 +217,9 @@
     </div>
 
     <div id="final-result-screen" class="screen">
-        <h1 style="font-size: 4rem; color: var(--ka-yellow); text-shadow: 0 0 20px var(--ka-yellow); margin-top: 0;">TỔNG KẾT CHIẾN DỊCH</h1>
+        <h1 style="font-size: 4rem; color: var(--ka-yellow); text-shadow: 0 0 20px var(--ka-yellow); margin-top: 0;">TỔNG KẾT BÀI THI</h1>
         
-        <div id="podium-area" class="podium-container" style="display:none;">
+        <div id="podium-area" class="podium-stage" style="display:none;">
             <div class="podium-step">
                 <div class="podium-name" id="top2-name">-</div>
                 <div class="podium-score" id="top2-score">0</div>
@@ -198,7 +239,7 @@
 
         <div id="final-leaderboard" class="glass-panel" style="width: 90%; max-width: 600px; padding: 20px; margin: 0 auto; text-align: left;"></div>
         <br>
-        <button class="btn-3d" onclick="exportExcel()" style="background: linear-gradient(145deg, #00f3ff, #0088cc); margin: 10px;">XUẤT FILE EXCEL</button>
+        <button class="btn-3d" onclick="exportExcel()" style="background: linear-gradient(145deg, #00f3ff, #0088cc); margin: 10px;">XUẤT FILE KẾT QUẢ</button>
         <button class="btn-3d" onclick="location.reload()" style="background: linear-gradient(145deg, #ff4d79, #cc0033); box-shadow: 0 6px 0 #990026; margin: 10px; color: white;">KHỞI ĐỘNG LẠI</button>
     </div>
 </div>
@@ -208,12 +249,15 @@
     const SB_KEY = "sb_publishable_L8zkZyosiIUfXbznifDV5g_Stvlxt_O"; 
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    // --- HỆ THỐNG ÂM THANH (DIGITAL) ---
-    const audioBGM = new Audio('https://actions.google.com/sounds/v1/science_fiction/pulsing_sci_fi_loop.ogg');
-    audioBGM.loop = true; audioBGM.volume = 0.4;
+    // --- HỆ THỐNG ÂM THANH (Đã cập nhật nhạc sôi động và báo hết giờ) ---
+    // Nhạc nền Game Show sôi động (Lặp lại)
+    const audioBGM = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); 
+    audioBGM.loop = true; audioBGM.volume = 0.5;
     
-    const audioTimeUp = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
+    // Âm thanh kết thúc câu hỏi (Tiếng chuông báo / Buzzer)
+    const audioTimeUp = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg');
     
+    // Nhạc chiến thắng khi tổng kết
     const audioVictory = new Audio('https://actions.google.com/sounds/v1/crowds/crowd_cheering.ogg');
     
     // Logic bật/tắt âm thanh
@@ -246,7 +290,7 @@
                 else parsedC = parseInt(ansStr) || 0;
                 return { q: r[0], a: [r[1], r[2], r[3], r[4]], c: parsedC };
             });
-            alert(`✅ Đã đồng bộ ${quizData.length} dữ liệu không gian (câu hỏi)!`);
+            alert(`✅ Đã đồng bộ ${quizData.length} câu hỏi thành công!`);
         };
         reader.readAsBinaryString(e.target.files[0]);
     };
@@ -266,7 +310,7 @@
     async function joinGame() {
         roomPin = document.getElementById('input-pin').value;
         myName = document.getElementById('user-name').value;
-        if(!roomPin || !myName) return alert("Nhập đủ PIN và Tên Đặc Vụ!");
+        if(!roomPin || !myName) return alert("Nhập đủ PIN và Tên người chơi!");
         
         liveScores[myName] = 0; 
         liveCorrects[myName] = 0;
@@ -275,7 +319,7 @@
         
         showScreen('lobby-screen');
         document.getElementById('display-pin').innerText = roomPin;
-        document.getElementById('lobby-class-name').innerText = "ĐANG CHỜ TÍN HIỆU TỪ MÁY CHỦ...";
+        document.getElementById('lobby-class-name').innerText = "ĐANG CHỜ GIẢNG VIÊN MỞ BÀI THI...";
         initChannel(roomPin);
     }
 
@@ -284,7 +328,7 @@
         channel
         .on('presence', { event: 'sync' }, () => {
             const count = Object.keys(channel.presenceState()).length - (isHost ? 1 : 0);
-            document.getElementById('player-count').innerText = `${count} ĐẶC VỤ ONLINE`;
+            document.getElementById('player-count').innerText = `${count} NGƯỜI CHƠI ONLINE`;
         })
         .on('broadcast', { event: 'game_start' }, () => showScreen('main-layout'))
         .on('broadcast', { event: 'game_update' }, (p) => updateGameUI(p.payload))
@@ -304,7 +348,7 @@
         showScreen('main-layout');
         document.getElementById('host-only-controls').style.display = 'block';
         
-        // Mở nhạc nền khi bắt đầu cho Host
+        // Mở nhạc nền khi bắt đầu
         audioBGM.play().catch(e => console.log("Trình duyệt chặn Autoplay"));
         
         nextQuestion();
@@ -327,7 +371,7 @@
         hasAnswered = false;
         correctIdx = parseInt(data.c); 
         document.getElementById('question-text').innerText = data.q;
-        document.getElementById('player-feedback').innerText = "";
+        document.getElementById('player-feedback').innerHTML = "";
         
         const labels = ['▲ (A)','◆ (B)','● (C)','■ (D)'];
         for(let i=0; i<4; i++) {
@@ -337,9 +381,9 @@
             document.getElementById('btn-' + i).style.transform = "scale(1)";
         }
         
-        // 1. CHỨC NĂNG HOST: Hiển thị đáp án câu hiện tại & câu trước
+        // Host Setup: Chuẩn bị text đáp án nhưng ẨN ĐI (display: none)
         if(isHost) {
-            document.getElementById('host-current-ans').style.display = 'block';
+            document.getElementById('host-current-ans').style.display = 'none'; // Ẩn lúc đang làm bài
             document.getElementById('correct-ans-live').innerText = labels[data.c] + " - " + data.a[data.c];
             
             if(currentIdx > 0) {
@@ -347,7 +391,6 @@
             }
         }
 
-        // Kích hoạt nhạc đếm giờ
         audioTimeUp.pause(); audioTimeUp.currentTime = 0;
         if(isHost || myName !== "") audioBGM.play().catch(e=>{});
 
@@ -361,14 +404,19 @@
             document.getElementById('timer').innerText = timerVal;
             
             if(timerVal <= 5) {
-                document.getElementById('timer').style.color = 'var(--ka-red)'; // Đổi màu cảnh báo
+                document.getElementById('timer').style.color = 'var(--ka-red)'; 
             }
 
             if(timerVal <= 0) {
                 clearInterval(timerInt);
                 document.querySelectorAll('.ka-btn').forEach(b => b.disabled = true);
                 
-                // Hết giờ: Tắt nhạc nền, bật chuông báo hết giờ
+                // Hết giờ: Hiển thị đáp án cho Host
+                if(isHost) {
+                    document.getElementById('host-current-ans').style.display = 'block';
+                }
+
+                // Hết giờ: Tắt nhạc nền, bật nhạc kết thúc câu hỏi
                 audioBGM.pause(); 
                 if(isHost || myName !== "") audioTimeUp.play().catch(e=>{});
             }
@@ -387,11 +435,13 @@
         });
         
         const fb = document.getElementById('player-feedback');
+        
+        // Yêu cầu: Đúng ghi "ĐÚNG" chữ đỏ, Sai ghi "SAI" chữ đen trên nền trắng để dễ nhìn
         if(idx == correctIdx) {
             const points = 500 + (timerVal * 25);
             totalScore += points;
             correctCount++; 
-            fb.innerHTML = `<span style="color:var(--ka-green); text-shadow: 0 0 15px var(--ka-green);">CHÍNH XÁC! +${points}đ</span>`;
+            fb.innerHTML = `<span style="color: red; background: white; padding: 5px 25px; border-radius: 8px; border: 2px solid red;">ĐÚNG</span>`;
             document.getElementById('stat-score').innerText = totalScore;
             
             liveScores[myName] = totalScore;
@@ -401,7 +451,7 @@
             
             supabaseClient.from('leaderboard').upsert({ student_name: myName, score: totalScore }, { onConflict: 'student_name' }).then();
         } else { 
-            fb.innerHTML = `<span style="color:var(--ka-red); text-shadow: 0 0 15px var(--ka-red);">NHẦM MỤC TIÊU!</span>`; 
+            fb.innerHTML = `<span style="color: black; background: white; padding: 5px 25px; border-radius: 8px; border: 2px solid black;">SAI</span>`; 
         }
     }
 
@@ -426,12 +476,11 @@
             oldRankings[p.student_name] = currentRank;
 
             if(i < 15 || isFinal) { 
-                // Highlight Top 3 trong bảng xếp hạng dọc
                 let colorInfo = (currentRank===1)?'var(--ka-yellow)':(currentRank===2)?'#c0c0c0':(currentRank===3)?'#cd7f32':'#fff';
                 
                 html += `<div class="rank-item" style="color: ${colorInfo}; font-weight: ${currentRank<=3?'bold':'normal'};">
                             <span><b>#${currentRank}</b> ${p.student_name} ${trend}</span>
-                            <span style="font-family:'Orbitron'; text-shadow: var(--text-glow);">${p.score}</span>
+                            <span style="font-family:'Times New Roman', serif;">${p.score}</span>
                          </div>`;
             }
         });
@@ -461,14 +510,12 @@
         showScreen('final-result-screen');
         renderLeaderboard(true); 
         
-        // Dừng các nhạc cũ, bật nhạc Victory
+        // Dừng nhạc cũ, bật nhạc trao giải
         audioBGM.pause(); audioTimeUp.pause();
         audioVictory.play().catch(e=>{});
 
-        // Bắn pháo hoa
         triggerFireworks();
 
-        // Cập nhật Podium Top 3
         const arr = window.fullDataForExport;
         if(arr && arr.length > 0) {
             document.getElementById('podium-area').style.display = 'flex';
@@ -492,7 +539,7 @@
     }
 
     function exportExcel() {
-        if(!window.fullDataForExport || window.fullDataForExport.length === 0) return alert("Hệ thống chưa có dữ liệu Đặc vụ!");
+        if(!window.fullDataForExport || window.fullDataForExport.length === 0) return alert("Hệ thống chưa có dữ liệu Người chơi!");
         
         const className = document.getElementById('class-name').value || 'Không rõ lớp';
         const now = new Date();
@@ -512,7 +559,7 @@
 
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "DiemTongKet");
-        XLSX.writeFile(wb, `BaoCao_ChienDich_${className.replace(/\s+/g, '_')}.xlsx`);
+        XLSX.writeFile(wb, `BaoCao_KetQua_${className.replace(/\s+/g, '_')}.xlsx`);
     }
 
     function showScreen(id) {
