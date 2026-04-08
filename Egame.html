@@ -7,22 +7,23 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
         :root { --ka-red: #e21b3c; --ka-blue: #1368ce; --ka-yellow: #d89e00; --ka-green: #26890c; --bg: #46178f; }
-        body { font-family: 'Segoe UI', Arial; background: var(--bg); color: white; margin: 0; overflow-x: hidden; }
-        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .card { background: white; color: #333; padding: 30px; border-radius: 15px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .screen { display: none; width: 100%; text-align: center; }
+        body { font-family: 'Segoe UI', Arial; background: var(--bg); color: white; margin: 0; text-align: center; }
+        .container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .card { background: white; color: #333; padding: 30px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .screen { display: none; width: 100%; }
         .active { display: block; }
         
-        /* Giao diện nút bấm màu sắc Kahoot */
-        .grid-kahoot { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 800px; margin: 20px auto; }
-        .ka-btn { padding: 40px; border: none; border-radius: 8px; cursor: pointer; font-size: 2rem; color: white; transition: 0.2s; position: relative; }
-        .ka-btn:active { transform: scale(0.95); }
+        /* Giao diện nút màu sắc tích hợp Text */
+        .grid-kahoot { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 95%; max-width: 900px; margin: 20px auto; }
+        .ka-btn { padding: 30px 15px; border: none; border-radius: 10px; cursor: pointer; font-size: 1.2rem; color: white; font-weight: bold; transition: 0.2s; min-height: 120px; display: flex; align-items: center; justify-content: center; }
+        .ka-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .red { background: var(--ka-red); } .blue { background: var(--ka-blue); }
         .yellow { background: var(--ka-yellow); } .green { background: var(--ka-green); }
         
-        .pin-display { font-size: 4rem; font-weight: bold; background: white; color: black; padding: 10px 40px; border-radius: 10px; margin: 20px 0; }
-        input { padding: 15px; width: 80%; border-radius: 8px; border: 1px solid #ddd; margin: 10px 0; font-size: 1.1rem; }
-        .timer-circle { width: 80px; height: 80px; border: 5px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px; }
+        .timer-circle { width: 70px; height: 70px; border: 4px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 20px; font-weight: bold; }
+        .pin-display { font-size: 3rem; font-weight: bold; background: white; color: black; padding: 10px 40px; border-radius: 10px; margin: 20px 0; display: inline-block; }
+        .leaderboard { background: white; color: #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 20px auto; text-align: left; }
+        .row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -30,51 +31,49 @@
 <div class="container">
     <div id="host-setup" class="screen active">
         <div class="card">
-            <h1 style="color:var(--bg)">Egame Host</h1>
-            <input type="text" id="class-name" placeholder="Nhập tên lớp học (VD: Lớp D30)...">
-            <p>Nạp ngân hàng câu hỏi (Excel):</p>
+            <h1>Egame Setup</h1>
+            <input type="text" id="class-name" placeholder="Tên lớp (VD: Lý luận 1)..." style="padding:12px; width:80%; margin-bottom:10px;">
             <input type="file" id="upload-excel" accept=".xlsx">
             <br><br>
-            <button onclick="createRoom()" style="background:var(--bg); color:white; padding:15px 30px; border:none; border-radius:8px; cursor:pointer;">TẠO MÃ PIN PHÒNG HỌC</button>
+            <button onclick="createRoom()" style="background:var(--bg); color:white; padding:15px 30px; border:none; border-radius:8px; cursor:pointer; width:100%;">TẠO PHÒNG CHƠI</button>
         </div>
-        <p style="margin-top:20px">Hoặc sinh viên: <button onclick="showJoin()" style="background:none; border:1px solid white; color:white; cursor:pointer;">Nhập PIN tham gia</button></p>
+        <p>Sinh viên bấm: <button onclick="showScreen('join-screen')" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer;">Nhập PIN</button></p>
     </div>
 
     <div id="join-screen" class="screen">
         <div class="card">
-            <h1>Egame PIN</h1>
-            <input type="text" id="input-pin" placeholder="Mã PIN game...">
-            <input type="text" id="user-name" placeholder="Tên của bạn...">
-            <br><br>
-            <button onclick="joinGame()" style="background:#26890c; color:white; padding:15px 30px; border:none; border-radius:8px; width:100%;">THAM GIA</button>
+            <h1>Nhập mã PIN</h1>
+            <input type="text" id="input-pin" placeholder="Mã PIN 6 số..." style="padding:12px; width:80%; margin-bottom:10px;">
+            <input type="text" id="user-name" placeholder="Họ và tên..." style="padding:12px; width:80%; margin-bottom:10px;">
+            <button onclick="joinGame()" style="background:#26890c; color:white; padding:15px; border:none; border-radius:8px; width:100%;">THAM GIA</button>
         </div>
     </div>
 
     <div id="lobby-screen" class="screen">
-        <h2 id="display-class-name">LỚP HỌC</h2>
-        <p>Mã PIN để sinh viên truy cập:</p>
+        <h2 id="display-class-name">PHÒNG CHỜ</h2>
         <div class="pin-display" id="display-pin">000000</div>
-        <div id="player-count" style="font-size: 1.5rem;">Đang chờ sinh viên... (0)</div>
+        <div id="player-count">Sinh viên: 0</div>
         <br>
         <button id="start-btn" onclick="startGame()" style="display:none; background:white; color:var(--bg); padding:15px 50px; font-weight:bold; border:none; border-radius:5px; cursor:pointer;">BẮT ĐẦU</button>
     </div>
 
     <div id="game-screen" class="screen">
         <div class="timer-circle" id="timer">20</div>
-        <h2 id="question-text" style="font-size: 2rem; margin-bottom: 30px;">Câu hỏi sẽ hiện ở đây</h2>
-        <div class="grid-kahoot">
-            <button class="ka-btn red" onclick="submitAns(0)">▲</button>
-            <button class="ka-btn blue" onclick="submitAns(1)">◆</button>
-            <button class="ka-btn yellow" onclick="submitAns(2)">●</button>
-            <button class="ka-btn green" onclick="submitAns(3)">■</button>
+        <h2 id="question-text" style="padding: 0 20px;">Câu hỏi</h2>
+        <div class="grid-kahoot" id="ans-container">
+            <button class="ka-btn red" onclick="submitAns(0)">▲ <span id="text-0"></span></button>
+            <button class="ka-btn blue" onclick="submitAns(1)">◆ <span id="text-1"></span></button>
+            <button class="ka-btn yellow" onclick="submitAns(2)">● <span id="text-2"></span></button>
+            <button class="ka-btn green" onclick="submitAns(3)">■ <span id="text-3"></span></button>
         </div>
+        <p id="feedback" style="font-weight:bold; font-size:1.5rem; margin-top:20px;"></p>
     </div>
 
     <div id="result-screen" class="screen">
         <h1>BẢNG VÀNG THÀNH TÍCH</h1>
-        <div id="leaderboard" style="max-width:500px; margin:auto; background:white; color:black; border-radius:10px; padding:20px; text-align:left;"></div>
+        <div id="leaderboard" class="leaderboard"></div>
         <br>
-        <button onclick="location.reload()" style="color:white; background:none; border:1px solid white; padding:10px;">Thoát</button>
+        <button onclick="location.reload()" style="background:white; color:var(--bg); padding:10px 30px; border:none; border-radius:5px; cursor:pointer;">KẾT THÚC TIẾT HỌC</button>
     </div>
 </div>
 
@@ -83,65 +82,40 @@
     const SB_KEY = "sb_publishable_L8zkZyosiIUfXbznifDV5g_Stvlxt_O"; 
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    let isHost = false;
-    let myName = "";
-    let roomPin = "";
-    let quizData = [];
-    let channel;
+    let isHost = false, myName = "", roomPin = "", quizData = [], channel;
+    let currentIdx = 0, currentCorrect = -1, timerValue = 20, timerInt, totalScore = 0;
 
-    // 1. GIẢNG VIÊN TẠO PHÒNG
+    // GIẢNG VIÊN NẠP FILE
     document.getElementById('upload-excel').onchange = (e) => {
         const reader = new FileReader();
         reader.onload = (evt) => {
-            const wb = XLSX.read(evt.target.result, {type: 'binary'});
-            const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
+            const data = XLSX.utils.sheet_to_json(XLSX.read(evt.target.result, {type:'binary'}).Sheets[XLSX.read(evt.target.result, {type:'binary'}).SheetNames[0]], {header:1});
             quizData = data.slice(1).map(r => ({ q: r[0], a: [r[1], r[2], r[3], r[4]], c: r[5] }));
+            alert("Đã nạp " + quizData.length + " câu hỏi!");
         };
         reader.readAsBinaryString(e.target.files[0]);
     };
 
     async function createRoom() {
-        const className = document.getElementById('class-name').value;
-        if(!className || quizData.length === 0) return alert("Vui lòng nhập tên lớp và nạp file Excel!");
-        
         roomPin = Math.floor(100000 + Math.random() * 900000).toString();
         isHost = true;
-        
-        await supabaseClient.from('game_rooms').insert({
-            room_id: roomPin,
-            class_name: className,
-            quiz_data: quizData,
-            status: 'lobby'
-        });
-
         document.getElementById('display-pin').innerText = roomPin;
-        document.getElementById('display-class-name').innerText = "LỚP: " + className;
+        document.getElementById('display-class-name').innerText = "LỚP: " + document.getElementById('class-name').value;
         document.getElementById('start-btn').style.display = 'inline-block';
         showScreen('lobby-screen');
         connectRealtime(roomPin);
     }
 
-    // 2. SINH VIÊN VÀO PHÒNG
-    function showJoin() { showScreen('join-screen'); }
-
     async function joinGame() {
         roomPin = document.getElementById('input-pin').value;
         myName = document.getElementById('user-name').value;
-        if(!roomPin || !myName) return alert("Nhập PIN và Tên!");
-
-        const { data } = await supabaseClient.from('game_rooms').select('*').eq('room_id', roomPin).single();
-        if(!data) return alert("Mã PIN không tồn tại!");
-
+        if(!roomPin || !myName) return alert("Nhập đủ PIN và Tên!");
         showScreen('lobby-screen');
-        document.getElementById('display-class-name').innerText = "CHỜ GIẢNG VIÊN BẮT ĐẦU...";
-        document.getElementById('display-pin').innerText = roomPin;
         connectRealtime(roomPin);
     }
 
-    // 3. KẾT NỐI REALTIME (PRESENCE & BROADCAST)
     function connectRealtime(pin) {
         channel = supabaseClient.channel('room_' + pin, { config: { presence: { key: myName || 'Host' } } });
-
         channel
         .on('presence', { event: 'sync' }, () => {
             const state = channel.presenceState();
@@ -155,10 +129,9 @@
         });
     }
 
-    // 4. ĐIỀU KHIỂN GAME
-    function startGame() { sendQuestion(0); }
+    function startGame() { sendNext(0); }
 
-    function sendQuestion(idx) {
+    function sendNext(idx) {
         channel.send({ type: 'broadcast', event: 'next_q', payload: { q: quizData[idx], idx: idx, total: quizData.length } });
         startQuestion({ q: quizData[idx], idx: idx, total: quizData.length });
     }
@@ -166,27 +139,65 @@
     function startQuestion(data) {
         showScreen('game-screen');
         document.getElementById('question-text').innerText = data.q.q;
-        let time = 20;
-        const timerDiv = document.getElementById('timer');
-        timerDiv.innerText = time;
+        document.getElementById('feedback').innerText = "";
+        currentCorrect = data.q.c;
         
-        const countdown = setInterval(() => {
-            time--;
-            timerDiv.innerText = time;
-            if(time <= 0) {
-                clearInterval(countdown);
+        // Hiện Text vào các nút
+        for(let i=0; i<4; i++) {
+            document.getElementById('text-' + i).innerText = data.q.a[i];
+            document.querySelectorAll('.ka-btn')[i].disabled = false;
+        }
+
+        timerValue = 20;
+        document.getElementById('timer').innerText = timerValue;
+        clearInterval(timerInt);
+        timerInt = setInterval(() => {
+            timerValue--;
+            document.getElementById('timer').innerText = timerValue;
+            if(timerValue <= 0) {
+                clearInterval(timerInt);
+                lockButtons();
                 if(isHost) {
-                    if(data.idx + 1 < data.total) setTimeout(() => sendQuestion(data.idx + 1), 3000);
-                    else finishGame();
+                    setTimeout(() => {
+                        if(data.idx + 1 < data.total) sendNext(data.idx + 1);
+                        else finishGame();
+                    }, 4000);
                 }
             }
         }, 1000);
     }
 
     async function submitAns(idx) {
-        // Trong Kahoot thật, sinh viên không biết đúng sai ngay, nhưng ở đây em tạm cộng điểm luôn
-        // Logic cộng điểm giống bản cũ của anh...
-        alert("Đã chọn! Hãy nhìn màn hình máy chiếu.");
+        lockButtons();
+        clearInterval(timerInt);
+        const fb = document.getElementById('feedback');
+        
+        if(idx == currentCorrect) {
+            // TÍNH ĐIỂM: 500 điểm cơ bản + (số giây còn lại * 25)
+            const bonus = timerValue * 25;
+            const points = 500 + bonus;
+            totalScore += points;
+            fb.innerHTML = `<span style="color:#2ecc71">CHÍNH XÁC! +${points}đ</span>`;
+            // Cập nhật lên Supabase
+            await supabaseClient.from('leaderboard').upsert({ student_name: myName, score: totalScore }, { onConflict: 'student_name' });
+        } else {
+            fb.innerHTML = `<span style="color:#e21b3c">SAI RỒI!</span>`;
+        }
+    }
+
+    function lockButtons() {
+        document.querySelectorAll('.ka-btn').forEach(b => b.disabled = true);
+    }
+
+    async function finishGame() {
+        showScreen('result-screen');
+        const { data } = await supabaseClient.from('leaderboard').select('*').order('score', { ascending: false }).limit(10);
+        document.getElementById('leaderboard').innerHTML = data.map((p, i) => `
+            <div class="row">
+                <span><b>${i + 1}. ${p.student_name}</b></span>
+                <span style="color:var(--ka-blue)">${p.score} điểm</span>
+            </div>
+        `).join('');
     }
 
     function showScreen(id) {
