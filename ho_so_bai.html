@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ Bài Giảng - TS. Cao Thanh Hùng</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --mo-ga: #FEF9E7;
+            --mo-ga-nhat: #FFFDF5;
+            --nau-do: #7C2D12;
+            --cam-dam: #D97706;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--mo-ga);
+            color: var(--nau-do);
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="w-full min-h-screen overflow-x-hidden flex flex-col">
+
+    <div id="toast-container" class="fixed top-6 right-6 z-[100]"></div>
+
+    <header class="h-16 flex items-center justify-center px-8 bg-white/50 border-b border-orange-100 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-[#7C2D12] flex items-center justify-center text-white shadow-md">
+                <i class="fa-solid fa-box-archive text-sm"></i>
+            </div>
+            <div class="text-sm font-black text-orange-900 uppercase tracking-widest">HỆ THỐNG QUẢN LÝ HỒ SƠ NGHIỆP VỤ</div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-6 md:p-10">
+        <section class="fade-in max-w-7xl mx-auto">
+            <div class="mb-12 text-center">
+                <h2 class="text-3xl md:text-4xl font-black text-orange-950 uppercase">Hồ sơ bài giảng</h2>
+                <p class="text-orange-600 font-bold text-xs md:text-sm uppercase tracking-widest mt-3">Giảng viên: Thiếu tá, TS. Cao Thanh Hùng</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8" id="profile-grid">
+                </div>
+        </section>
+    </main>
+
+    <script>
+        const profileTaps = [
+            "TẬP 1 - QUYẾT ĐỊNH HỒ SƠ BÀI",
+            "TẬP 2 - CHƯƠNG TRÌNH",
+            "TẬP 3 - KẾ HOẠCH",
+            "TẬP 4 - GIÁO ÁN",
+            "TẬP 5 - NGOẠI KHÓA",
+            "TẬP 6 - CÂU HỎI SEMINAR",
+            "TẬP 7 - NGÂN HÀNG CÂU HỎI",
+            "TẬP 8 - CÔNG CỤ LƯU TRỮ"
+        ];
+
+        // Khởi tạo Hồ sơ bài và cơ chế lưu link tự động
+        const profileGrid = document.getElementById('profile-grid');
+        
+        profileTaps.forEach((title, idx) => {
+            const tapId = idx + 1;
+            // Lấy lại dữ liệu đã lưu trong máy tính nếu có
+            const savedLink = localStorage.getItem(`profile_tap_${tapId}`) || "";
+            
+            const div = document.createElement('div');
+            div.className = "bg-white p-6 md:p-8 rounded-[32px] border border-orange-50 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center group hover:-translate-y-1";
+            div.innerHTML = `
+                <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-900 flex items-center justify-center font-black text-xl mb-5 group-hover:bg-orange-900 group-hover:text-white transition-colors duration-300">${tapId}</div>
+                <h4 class="text-[11px] md:text-xs font-black text-orange-950 uppercase mb-5 h-10 flex items-center justify-center leading-relaxed">${title}</h4>
+                <input type="text" id="input-tap-${tapId}" value="${savedLink}" 
+                    onchange="saveProfileLink(${tapId}, this.value)"
+                    placeholder="Dán link Google Drive..." 
+                    class="w-full text-xs px-5 py-4 bg-orange-50/50 border border-orange-100 rounded-xl outline-none mb-4 font-medium focus:ring-2 focus:ring-orange-200 transition-all">
+                <button onclick="openProfileLink(${tapId})" class="w-full py-3.5 bg-orange-900 text-white text-[11px] font-black rounded-xl uppercase hover:bg-orange-800 active:scale-95 transition-all shadow-md shadow-orange-900/20">Mở hồ sơ</button>
+            `;
+            profileGrid.appendChild(div);
+        });
+
+        // Hàm lưu link tự động
+        function saveProfileLink(id, value) {
+            localStorage.setItem(`profile_tap_${id}`, value);
+            showToast(`Đã lưu tự động link Tập ${id}`);
+        }
+
+        // Hàm mở link
+        function openProfileLink(id) {
+            const link = document.getElementById(`input-tap-${id}`).value.trim();
+            if(link) {
+                // Kiểm tra xem link có bắt đầu bằng http không, nếu không thì tự động thêm vào
+                const finalLink = link.startsWith('http') ? link : 'https://' + link;
+                window.open(finalLink, '_blank');
+            } else {
+                showToast(`Vui lòng dán link vào ô trống trước!`);
+            }
+        }
+
+        // Hàm hiển thị thông báo
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = "fade-in bg-white border-l-4 border-orange-900 p-4 rounded-xl shadow-2xl font-bold text-xs text-orange-950 mb-3 flex items-center gap-3";
+            t.innerHTML = `<i class="fa-solid fa-circle-check text-green-600 text-lg"></i><span>${msg}</span>`;
+            
+            container.appendChild(t);
+            
+            // Tự động tắt sau 3 giây
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateY(-10px)';
+                t.style.transition = 'all 0.3s ease';
+                setTimeout(() => t.remove(), 3000);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
