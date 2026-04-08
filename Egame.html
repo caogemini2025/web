@@ -32,14 +32,12 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 243, 255, 0.05);
         }
 
-        /* 3D Digital Space cho khu vực trò chơi */
         .game-area { 
             flex: 3; padding: 30px; display: flex; flex-direction: column; align-items: center; 
             justify-content: center; position: relative;
             background: radial-gradient(ellipse at center, rgba(0,243,255,0.05) 0%, transparent 70%);
         }
         
-        /* Bảng hiển thị câu hỏi HUD */
         .question-board {
             background: rgba(0, 34, 68, 0.6);
             border: 2px solid var(--ka-blue);
@@ -53,7 +51,6 @@
             overflow: hidden;
         }
         
-        /* Hiệu ứng tia quét ngang bảng điện tử */
         .question-board::after {
             content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent);
@@ -69,17 +66,15 @@
         .giant-pin-card { padding: 40px; border-radius: 20px; width: 80%; max-width: 600px; text-align: center; }
         .pin-number { font-size: 6.5rem; font-weight: bold; color: var(--ka-blue); letter-spacing: 15px; margin: 20px 0; border: 2px dashed var(--ka-blue); padding: 15px; border-radius: 15px; background: rgba(0,0,0,0.5); }
 
-        /* Phối cảnh 3D cho vỉ chứa đáp án */
         .grid-kahoot { 
             display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-top: 15px; 
-            perspective: 1000px; /* Tạo chiều sâu không gian */
+            perspective: 1000px;
         }
         
-        /* 3D Glass Buttons - Màu nhạt (Pastel), chữ xanh dương đậm */
         .ka-btn { 
             padding: 25px 15px; border: 1px solid rgba(255,255,255,0.4); border-radius: 15px; cursor: pointer; 
             font-size: 1.6rem; font-family: Arial, sans-serif; font-weight: bold; 
-            color: #002244 !important; /* Xanh dương đậm */
+            color: #002244 !important; 
             min-height: 120px; transition: all 0.3s ease; position: relative; top: 0; 
             text-shadow: none; transform-style: preserve-3d;
             backdrop-filter: blur(5px);
@@ -87,13 +82,11 @@
         .ka-btn:active:not(:disabled) { top: 6px; box-shadow: 0 2px 0 rgba(0,0,0,0.2), inset 0 2px 5px rgba(255,255,255,0.5) !important; }
         .ka-btn:hover:not(:disabled) { transform: translateY(-5px) scale(1.02); }
         
-        /* Màu nhạt Pastel + Đổ bóng không gian 3D */
         .red { background: linear-gradient(145deg, #ffb3ba, #e699a0); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #cc8086, inset 0 2px 10px rgba(255,255,255,0.8); } 
         .blue { background: linear-gradient(145deg, #bae1ff, #99cce6); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #80b3cc, inset 0 2px 10px rgba(255,255,255,0.8); } 
         .yellow { background: linear-gradient(145deg, #ffffba, #e6e699); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #cccc80, inset 0 2px 10px rgba(255,255,255,0.8); } 
         .green { background: linear-gradient(145deg, #baffc9, #99e6aa); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #80cc90, inset 0 2px 10px rgba(255,255,255,0.8); }
         
-        /* Digital Timer */
         .timer-circle { 
             width: 90px; height: 90px; border: 4px solid var(--ka-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 25px; font-weight: bold; font-family: 'Times New Roman', serif; box-shadow: 0 0 15px var(--ka-blue), inset 0 0 15px var(--ka-blue); color: var(--ka-blue); text-shadow: var(--text-glow); background: rgba(0,0,0,0.4);
         }
@@ -114,7 +107,6 @@
         }
         .btn-3d:active { transform: translateY(6px); box-shadow: none; }
 
-        /* Nút Câu Tiếp Theo (Cyber Ring) - Chỉ Host thấy */
         .next-btn {
             position: absolute; bottom: 30px; right: 30px;
             background: rgba(0, 243, 255, 0.1); color: var(--ka-blue);
@@ -138,7 +130,6 @@
         }
         .audio-btn:hover { background: rgba(0,243,255,0.4); transform: scale(1.1); }
 
-        /* Podium 3D */
         .podium-stage {
             display: flex; justify-content: center; align-items: flex-end;
             gap: 20px; height: 350px; margin: 50px auto; width: 80%;
@@ -329,7 +320,6 @@
         myName = document.getElementById('user-name').value.trim();
         if(!roomPin || !myName) return alert("Nhập đủ PIN và Tên người chơi!");
         
-        // Ngăn chặn bấm nhiều lần gây lag
         let btn = document.getElementById('join-btn');
         btn.disabled = true;
         btn.innerText = "ĐANG VÀO...";
@@ -344,13 +334,15 @@
         document.getElementById('lobby-class-name').innerText = "ĐANG CHỜ GIẢNG VIÊN MỞ BÀI THI...";
         initChannel(roomPin);
         
-        // Khôi phục nút bấm sau 2 giây (đề phòng ấn lại)
         setTimeout(() => { btn.disabled = false; btn.innerText = "VÀO THI"; }, 2000);
     }
 
     function initChannel(pin) {
-        // [FIX QUAN TRỌNG]: Hủy toàn bộ sóng cũ trước khi mở sóng mới để tránh học viên bị kẹt mạng do gửi/nhận trùng lặp
-        supabaseClient.removeAllChannels();
+        // [QUAN TRỌNG]: Nếu máy học viên đang lưu kết nối cũ (cache), lập tức dập tắt nó.
+        if (channel) {
+            supabaseClient.removeChannel(channel);
+            channel = null;
+        }
 
         channel = supabaseClient.channel('room_' + pin, { config: { presence: { key: myName || 'Host' } } });
         
@@ -358,8 +350,9 @@
         .on('presence', { event: 'sync' }, () => {
             let count = 0;
             const state = channel.presenceState();
+            // Đếm chính xác số người chơi, khắc phục lỗi nhiều người dùng chung 1 tên (hoặc mở 2 tab)
             for(let key in state) {
-                if(key !== 'Host') count++;
+                if(key !== 'Host') count += state[key].length;
             }
             document.getElementById('player-count').innerText = `${count} NGƯỜI CHƠI ONLINE`;
         })
@@ -371,10 +364,12 @@
             renderLeaderboard();
         })
         .on('broadcast', { event: 'game_finish' }, () => showFinalResult())
-        .subscribe(async (status) => {
-            // Chỉ cập nhật trạng thái online khi mạng thực sự thông suốt
+        .subscribe(async (status, err) => {
+            // [CẬP NHẬT]: Chỉ khai báo trạng thái online khi máy chủ đã đồng ý kết nối.
             if (status === 'SUBSCRIBED') {
                 await channel.track({ online_at: new Date().toISOString() });
+            } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                alert("Đường truyền tới máy chủ Supabase đang gián đoạn. Vui lòng tải lại trang (F5)!");
             }
         });
     }
@@ -409,13 +404,11 @@
             let btn = document.getElementById('btn-' + i);
             document.getElementById('txt-' + i).innerText = data.a[i];
             
-            // Đặt lại hiệu ứng ban đầu cho các nút
             btn.disabled = false;
             btn.style.opacity = "1";
             btn.style.transform = "scale(1)";
             btn.style.border = "1px solid rgba(255,255,255,0.4)";
             
-            // Phục hồi lại đổ bóng đáy cho khối 3D tùy theo màu
             if (btn.classList.contains('red')) btn.style.boxShadow = "0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #cc8086, inset 0 2px 10px rgba(255,255,255,0.8)";
             if (btn.classList.contains('blue')) btn.style.boxShadow = "0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #80b3cc, inset 0 2px 10px rgba(255,255,255,0.8)";
             if (btn.classList.contains('yellow')) btn.style.boxShadow = "0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #cccc80, inset 0 2px 10px rgba(255,255,255,0.8)";
@@ -441,7 +434,6 @@
             if(timerVal <= 0) {
                 clearInterval(timerInt);
                 
-                // Hết giờ: Mờ đáp án sai, sáng đáp án đúng cho cả Giảng viên và Học viên
                 document.querySelectorAll('.ka-btn').forEach((b, index) => {
                     b.disabled = true;
                     if(index === correctIdx) {
