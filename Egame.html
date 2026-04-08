@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Egame Pro v5 - TS. Cao Thanh Hùng</title>
+    <title>Egame Pro v5.1 - TS. Cao Thanh Hùng</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
@@ -11,10 +11,7 @@
         .container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .main-layout { display: flex; width: 95%; max-width: 1300px; gap: 20px; height: 85vh; }
         
-        /* Cột trái: Nội dung chính */
         .game-area { flex: 3; background: rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;}
-        
-        /* Cột phải: Bảng điểm cố định */
         .sidebar { flex: 1; background: white; color: #333; border-radius: 15px; padding: 15px; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
         
         .screen { display: none; width: 100%; text-align: center; }
@@ -42,7 +39,7 @@
 <div class="container">
     <div id="setup-screen" class="screen active">
         <div style="background: white; color: #333; padding: 30px; border-radius: 15px; width: 450px;">
-            <h1 style="color:var(--bg); margin-top:0;">Egame Pro v6</h1>
+            <h1 style="color:var(--bg); margin-top:0;">Egame Pro v5</h1>
             <div id="host-part" style="text-align: left; background: #f9f9f9; padding: 15px; border-radius: 10px;">
                 <p style="margin-top:0;"><b>🔑 Giảng viên:</b></p>
                 <input type="text" id="class-name" placeholder="Tên lớp..." style="width:94%; padding:10px; margin-bottom:10px;">
@@ -112,13 +109,13 @@
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     let isHost = false, myName = "", roomPin = "", quizData = [], channel;
-    let currentIdx = -1, correctIdx = -1, timerVal = 20, timerInt, totalScore = 0, hasAnswered = false;
+    let currentIdx = -1, correctIdx = -1, timerVal = 20, timerInt, totalScore = 0, correctCount = 0, hasAnswered = false;
     
-    // Lưu trữ điểm nội bộ cực nhanh (Bypass Database delay)
+    // Lưu trữ điểm nội bộ cực nhanh
     let liveScores = {}; 
+    let liveCorrects = {}; // Thêm biến lưu số câu đúng
     let oldRankings = {};
 
-    // 1. ĐỌC EXCEL THÔNG MINH (Xử lý cả A,B,C,D và 0,1,2,3)
     document.getElementById('upload-excel').onchange = (e) => {
         const reader = new FileReader();
         reader.onload = (evt) => {
@@ -152,7 +149,8 @@
         myName = document.getElementById('user-name').value;
         if(!roomPin || !myName) return alert("Nhập đủ PIN và Tên!");
         
-        liveScores[myName] = 0; // Khởi tạo điểm
+        liveScores[myName] = 0; 
+        liveCorrects[myName] = 0;
         document.getElementById('my-stats').style.display = 'block';
         document.getElementById('stat-name').innerText = myName;
         
@@ -172,7 +170,8 @@
         .on('broadcast', { event: 'game_start' }, () => showScreen('main-layout'))
         .on('broadcast', { event: 'game_update' }, (p) => updateGameUI(p.payload))
         .on('broadcast', { event: 'score_update' }, (p) => {
-            liveScores[p.payload.name] = p.payload.score; // Cập nhật điểm ngay lập tức từ sóng
+            liveScores[p.payload.name] = p.payload.score;
+            liveCorrects[p.payload.name] = p.payload.correct; // Nhận số câu đúng từ sóng
             renderLeaderboard();
         })
         .on('broadcast', { event: 'game_finish' }, () => showFinalResult())
@@ -240,25 +239,29 @@
         if(idx == correctIdx) {
             const points = 500 + (timerVal * 25);
             totalScore += points;
+            correctCount++; // Tăng biến đếm câu đúng
             fb.innerHTML = `<span style="color:#2ecc71">ĐÚNG RỒI! +${points}đ</span>`;
             document.getElementById('stat-score').innerText = totalScore;
             
-            // Cập nhật điểm nội bộ và phát sóng cho cả lớp thấy ngay
             liveScores[myName] = totalScore;
+            liveCorrects[myName] = correctCount;
             renderLeaderboard();
-            channel.send({ type: 'broadcast', event: 'score_update', payload: { name: myName, score: totalScore } });
+            channel.send({ type: 'broadcast', event: 'score_update', payload: { name: myName, score: totalScore, correct: correctCount } });
             
-            // Lưu ngầm lên Database
+            // Có thể giữ lệnh lưu ngầm này nếu DB của anh đã sẵn sàng, nếu không nó cũng không gây ảnh hưởng tới quá trình chơi
             supabaseClient.from('leaderboard').upsert({ student_name: myName, score: totalScore }, { onConflict: 'student_name' }).then();
         } else { 
             fb.innerHTML = `<span style="color:#e21b3c">SAI RỒI!</span>`; 
         }
     }
 
-    // HIỂN THỊ BẢNG XẾP HẠNG THÔNG MINH
     function renderLeaderboard(isFinal = false) {
-        let arr = Object.keys(liveScores).map(k => ({ student_name: k, score: liveScores[k] }));
-        arr.sort((a, b) => b.score - a.score); // Sắp xếp điểm từ cao xuống thấp
+        let arr = Object.keys(liveScores).map(k => ({ 
+            student_name: k, 
+            score: liveScores[k],
+            correct: liveCorrects[k] || 0 // Lấy dữ liệu câu đúng
+        }));
+        arr.sort((a, b) => b.score - a.score);
 
         let html = "";
         arr.forEach((p, i) => {
@@ -287,15 +290,35 @@
 
     function showFinalResult() {
         showScreen('final-result-screen');
-        renderLeaderboard(true); // Đổ toàn bộ danh sách sang màn hình kết thúc
+        renderLeaderboard(true); 
     }
 
+    // XUẤT EXCEL THEO ĐÚNG 5 CỘT YÊU CẦU
     function exportExcel() {
         if(!window.fullDataForExport || window.fullDataForExport.length === 0) return alert("Chưa có dữ liệu sinh viên!");
-        const ws = XLSX.utils.json_to_sheet(window.fullDataForExport);
+        
+        const className = document.getElementById('class-name').value || 'Không rõ lớp';
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN'); // Lấy ngày giờ hiện tại
+
+        // Tái cấu trúc dữ liệu theo 5 cột của TS. Hùng
+        const excelData = window.fullDataForExport.map((p, index) => ({
+            "STT": index + 1,
+            "Ngày tháng năm": dateStr,
+            "Họ tên": p.student_name,
+            "Lớp": className,
+            "Điểm số": p.score,
+            "Số câu đúng": p.correct
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        
+        // Căn chỉnh độ rộng cột cho đẹp
+        ws['!cols'] = [ {wch: 5}, {wch: 20}, {wch: 25}, {wch: 15}, {wch: 10}, {wch: 15} ];
+
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "DiemTongKet");
-        XLSX.writeFile(wb, `KetQua_Egame_${document.getElementById('class-name').value || 'Lop'}.xlsx`);
+        XLSX.writeFile(wb, `KetQua_Egame_${className.replace(/\s+/g, '_')}.xlsx`);
     }
 
     function showScreen(id) {
