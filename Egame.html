@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Egame - V1.0 - TS. Cao Thanh Hùng</title>
+    <title>Egame - V1.0 </title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -308,8 +308,9 @@
     }
 
     async function joinGame() {
-        roomPin = document.getElementById('input-pin').value;
-        myName = document.getElementById('user-name').value;
+        // Fix: Loại bỏ khoảng trắng bị dư khi người chơi copy/paste mã PIN
+        roomPin = document.getElementById('input-pin').value.trim();
+        myName = document.getElementById('user-name').value.trim();
         if(!roomPin || !myName) return alert("Nhập đủ PIN và Tên người chơi!");
         
         liveScores[myName] = 0; 
@@ -327,7 +328,12 @@
         channel = supabaseClient.channel('room_' + pin, { config: { presence: { key: myName || 'Host' } } });
         channel
         .on('presence', { event: 'sync' }, () => {
-            const count = Object.keys(channel.presenceState()).length - (isHost ? 1 : 0);
+            // Fix: Đếm chính xác số người chơi bằng cách bỏ qua mã 'Host'
+            let count = 0;
+            const state = channel.presenceState();
+            for(let key in state) {
+                if(key !== 'Host') count++;
+            }
             document.getElementById('player-count').innerText = `${count} NGƯỜI CHƠI ONLINE`;
         })
         .on('broadcast', { event: 'game_start' }, () => showScreen('main-layout'))
@@ -344,7 +350,8 @@
     }
 
     function startGameNow() {
-        channel.send({ type: 'broadcast', event: 'game_start' });
+        // Fix: Bỏ lệnh gửi 'game_start' dư thừa để tránh xung đột tín hiệu mạng, 
+        // hàm nextQuestion() đã bao gồm lệnh mở bài thi an toàn.
         showScreen('main-layout');
         document.getElementById('host-only-controls').style.display = 'block';
         
@@ -449,7 +456,7 @@
             renderLeaderboard();
             channel.send({ type: 'broadcast', event: 'score_update', payload: { name: myName, score: totalScore, correct: correctCount } });
             
-            supabaseClient.from('leaderboard').upsert({ student_name: myName, score: totalScore }, { onConflict: 'student_name' }).then();
+            supabaseClient.from('leaderboard').upsert({ student_name: myName, score: totalScore }, { onConflict: 'student_name' }).then().catch(e=>{});
         } else { 
             fb.innerHTML = `<span style="color: black; background: white; padding: 5px 25px; border-radius: 8px; border: 2px solid black;">SAI</span>`; 
         }
