@@ -2,13 +2,13 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Egame - V1.0 </title>
+    <title>Egame - V1.0 - TS. Cao Thanh Hùng</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { 
-            --ka-red: #ff3366; --ka-blue: #00f3ff; --ka-yellow: #ffde00; --ka-green: #00ff66; 
+            --ka-blue: #00f3ff; --ka-yellow: #ffde00; --ka-green: #00ff66; 
             --bg-dark: #0a0b10; --panel-bg: rgba(20, 22, 35, 0.85); --glass-border: rgba(0, 243, 255, 0.3);
             --text-glow: 0 0 10px rgba(0, 243, 255, 0.8);
         }
@@ -26,7 +26,6 @@
         .container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 1; }
         .main-layout { display: flex; width: 95%; max-width: 1400px; gap: 25px; height: 85vh; }
         
-        /* Glassmorphism Panels */
         .glass-panel {
             background: var(--panel-bg); backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border); border-radius: 20px;
@@ -46,15 +45,20 @@
 
         .grid-kahoot { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 25px; }
         
-        /* 3D Buttons */
+        /* 3D Buttons - Màu nhạt (Pastel), chữ xanh dương đậm */
         .ka-btn { 
-            padding: 25px 15px; border: none; border-radius: 12px; cursor: pointer; font-size: 1.5rem; font-family: Arial, sans-serif; font-weight: bold; color: white; min-height: 120px; transition: all 0.1s; position: relative; top: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            padding: 25px 15px; border: none; border-radius: 12px; cursor: pointer; 
+            font-size: 1.6rem; font-family: Arial, sans-serif; font-weight: bold; 
+            color: #002244 !important; /* Xanh dương đậm */
+            min-height: 120px; transition: all 0.3s ease; position: relative; top: 0; 
+            text-shadow: none; 
         }
         .ka-btn:active:not(:disabled) { top: 6px; box-shadow: none !important; }
-        .red { background: linear-gradient(145deg, #ff4d79, var(--ka-red)); box-shadow: 0 8px 0 #cc0033, 0 15px 20px rgba(255,51,102,0.4); } 
-        .blue { background: linear-gradient(145deg, #33f5ff, var(--ka-blue)); box-shadow: 0 8px 0 #00b8cc, 0 15px 20px rgba(0,243,255,0.4); color: #000; text-shadow: none;} 
-        .yellow { background: linear-gradient(145deg, #ffe633, var(--ka-yellow)); box-shadow: 0 8px 0 #cca300, 0 15px 20px rgba(255,222,0,0.4); color: #000; text-shadow: none;} 
-        .green { background: linear-gradient(145deg, #33ff85, var(--ka-green)); box-shadow: 0 8px 0 #00cc44, 0 15px 20px rgba(0,255,102,0.4); color: #000; text-shadow: none;}
+        
+        .red { background: #ffb3ba; box-shadow: 0 8px 0 #e699a0; } 
+        .blue { background: #bae1ff; box-shadow: 0 8px 0 #99cce6; } 
+        .yellow { background: #ffffba; box-shadow: 0 8px 0 #e6e699; } 
+        .green { background: #baffc9; box-shadow: 0 8px 0 #99e6aa; }
         
         /* Digital Timer */
         .timer-circle { 
@@ -65,10 +69,8 @@
         .trend-up { color: #00ff66; font-size: 1rem; margin-left: 5px; text-shadow: 0 0 5px #00ff66;} 
         .trend-down { color: #ff3366; font-size: 1rem; margin-left: 5px; text-shadow: 0 0 5px #ff3366;}
         
-        .host-controls { margin-top: 25px; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; color: #fff; width: 90%; border: 1px solid var(--ka-green); }
         #my-stats { background: rgba(0, 255, 102, 0.2); color: var(--ka-green); padding: 12px 25px; border-radius: 10px; margin-top: 15px; font-size: 1.4rem; font-weight: bold; border: 1px solid var(--ka-green); text-shadow: 0 0 5px var(--ka-green); }
 
-        /* Input 3D style */
         input[type="text"], input[type="file"] {
             background: rgba(0,0,0,0.5); border: 1px solid var(--ka-blue); color: #fff; border-radius: 8px; font-family: Arial, sans-serif; font-size: 1.2rem;
         }
@@ -78,6 +80,16 @@
             background: linear-gradient(145deg, #00f3ff, #0088cc); color: #000; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; font-family: 'Times New Roman', serif; box-shadow: 0 6px 0 #006699; transition: 0.1s;
         }
         .btn-3d:active { transform: translateY(6px); box-shadow: none; }
+
+        /* Nút Câu Tiếp Theo gọn ở góc (Chỉ Host thấy) */
+        .next-btn {
+            position: absolute; bottom: 25px; right: 25px;
+            background: linear-gradient(145deg, #ffde00, #cca300); color: #000;
+            border: none; border-radius: 50%; width: 65px; height: 65px;
+            font-size: 2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 0 #997a00, 0 10px 20px rgba(0,0,0,0.5); transition: 0.2s; z-index: 10;
+        }
+        .next-btn:active { transform: translateY(6px); box-shadow: none; }
 
         /* Nút Audio Floating */
         .audio-btn {
@@ -93,11 +105,10 @@
         .podium-stage {
             display: flex; justify-content: center; align-items: flex-end;
             gap: 20px; height: 350px; margin: 50px auto; width: 80%;
-            perspective: 1000px; /* Tạo chiều sâu không gian 3D */
+            perspective: 1000px;
             position: relative;
         }
         
-        /* Hiệu ứng sàn sân khấu */
         .podium-stage::before {
             content: ''; position: absolute; bottom: -30px; left: -10%; right: -10%; height: 100px;
             background: radial-gradient(ellipse at center, rgba(0,243,255,0.3) 0%, transparent 70%);
@@ -107,14 +118,13 @@
         .podium-step {
             display: flex; flex-direction: column; align-items: center; width: 150px;
             transform-style: preserve-3d;
-            transform: rotateX(15deg); /* Nghiêng bục ra phía sau để thấy mặt trên */
+            transform: rotateX(15deg);
             z-index: 1;
         }
 
         .podium-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; text-shadow: 0 0 10px #fff; text-align: center; white-space: nowrap; transform: translateZ(20px); }
         .podium-score { font-size: 1.2rem; color: var(--ka-yellow); margin-bottom: 15px; transform: translateZ(20px); }
         
-        /* Tạo hình khối 3D cho bục đứng */
         .step-block { 
             width: 100%; display: flex; align-items: center; justify-content: center; 
             font-size: 4rem; font-family: 'Times New Roman', serif; font-weight: bold; color: rgba(0,0,0,0.6); 
@@ -122,7 +132,6 @@
             box-shadow: 0 20px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.3);
         }
         
-        /* Mặt trên của bục (Depth) */
         .step-block::before {
             content: ''; position: absolute; top: -30px; left: 0; width: 100%; height: 30px;
             background: inherit; filter: brightness(1.3);
@@ -130,7 +139,6 @@
             border-top: 1px solid rgba(255,255,255,0.8);
         }
         
-        /* Mặt bên hông của bục (Depth) */
         .step-block::after {
             content: ''; position: absolute; top: 0; right: -20px; width: 20px; height: 100%;
             background: inherit; filter: brightness(0.7);
@@ -151,17 +159,16 @@
     <div id="setup-screen" class="screen active">
         <div class="glass-panel" style="padding: 40px; width: 500px; position: relative;">
             <h1 style="color:var(--ka-blue); margin-top:0; text-shadow: var(--text-glow); font-size: 2.5rem;">EGAME - V1.0</h1>
-            <p style="color: #aaa; margin-top: -15px;">DIGITAL TRANSFORMATION EDITION</p>
             
-            <div id="host-part" style="text-align: left; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
-                <p style="margin-top:0; color: var(--ka-green); font-size: 1.2rem;"><b><span style="font-family:'Times New Roman', serif;">[HOST]</span> GIẢNG VIÊN</b></p>
+            <div id="host-part" style="text-align: left; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
+                <p style="margin-top:0; color: var(--ka-green); font-size: 1.2rem;"><b>GIẢNG VIÊN</b></p>
                 <input type="text" id="class-name" placeholder="Tên lớp..." style="width:94%; padding:12px; margin-bottom:15px;">
                 <input type="file" id="upload-excel" accept=".xlsx" style="width:94%; margin-bottom:20px; padding: 10px;">
                 <button class="btn-3d" onclick="createRoom()" style="width:100%;">MỞ PHÒNG HỌC</button>
             </div>
             <hr style="margin: 25px 0; border-color: rgba(255,255,255,0.1);">
             <div id="player-part" style="text-align: left; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
-                <p style="margin-top:0; color: var(--ka-yellow); font-size: 1.2rem;"><b><span style="font-family:'Times New Roman', serif;">[PLAYER]</span> NGƯỜI CHƠI</b></p>
+                <p style="margin-top:0; color: var(--ka-yellow); font-size: 1.2rem;"><b>NGƯỜI CHƠI</b></p>
                 <input type="text" id="input-pin" placeholder="Mã PIN..." style="width:94%; padding:12px; margin-bottom:15px;">
                 <input type="text" id="user-name" placeholder="Họ và tên..." style="width:94%; padding:12px; margin-bottom:20px;">
                 <button class="btn-3d" onclick="joinGame()" style="width:100%; background: linear-gradient(145deg, #33ff85, #00cc44); box-shadow: 0 6px 0 #009933;">VÀO THI</button>
@@ -195,15 +202,7 @@
                     <button class="ka-btn green" id="btn-3" onclick="submitAns(3)">■ <span id="txt-3"></span></button>
                 </div>
                 
-                <div id="host-only-controls" class="host-controls" style="display:none;">
-                    <div id="host-current-ans" style="background: rgba(0,243,255,0.2); border: 1px solid var(--ka-blue); padding: 15px; border-radius: 10px; margin-bottom: 15px; display: none;">
-                        <span style="color: var(--ka-blue); font-family: 'Times New Roman', serif; font-weight: bold;">ĐÁP ÁN ĐÚNG CỦA CÂU NÀY LÀ:</span> 
-                        <span id="correct-ans-live" style="font-weight:bold; font-size:1.5rem; display:block; margin-top:5px; color: white;"></span>
-                    </div>
-                    
-                    <p id="correct-ans-display" style="font-weight:bold; color:var(--ka-green); font-size:1.2rem; margin-bottom: 15px;"></p>
-                    <button class="btn-3d" onclick="nextQuestion()" style="width: 100%; background: linear-gradient(145deg, #ffde00, #cca300); box-shadow: 0 6px 0 #997a00; color:#000;">PHÁT CÂU TIẾP THEO >></button>
-                </div>
+                <button id="host-next-btn" class="next-btn" onclick="nextQuestion()" title="Phát câu tiếp theo" style="display:none;">⏭</button>
                 
                 <div id="my-stats" style="display:none;">NGƯỜI CHƠI: <span id="stat-name"></span> | ĐIỂM SỐ: <span id="stat-score">0</span></div>
                 <div id="player-feedback" style="margin-top:20px; font-weight:bold; font-size:2.5rem; font-family: Arial, sans-serif; height: 50px;"></div>
@@ -249,28 +248,19 @@
     const SB_KEY = "sb_publishable_L8zkZyosiIUfXbznifDV5g_Stvlxt_O"; 
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    // --- HỆ THỐNG ÂM THANH (Đã cập nhật nhạc sôi động và báo hết giờ) ---
-    // Nhạc nền Game Show sôi động (Lặp lại)
     const audioBGM = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); 
     audioBGM.loop = true; audioBGM.volume = 0.5;
-    
-    // Âm thanh kết thúc câu hỏi (Tiếng chuông báo / Buzzer)
     const audioTimeUp = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg');
-    
-    // Nhạc chiến thắng khi tổng kết
     const audioVictory = new Audio('https://actions.google.com/sounds/v1/crowds/crowd_cheering.ogg');
     
-    // Logic bật/tắt âm thanh
     let isMuted = false;
     function toggleAudio() {
         isMuted = !isMuted;
         document.getElementById('audio-toggle-btn').innerText = isMuted ? '🔇' : '🔊';
-        
         audioBGM.muted = isMuted;
         audioTimeUp.muted = isMuted;
         audioVictory.muted = isMuted;
     }
-    // -----------------------------------
 
     let isHost = false, myName = "", roomPin = "", quizData = [], channel;
     let currentIdx = -1, correctIdx = -1, timerVal = 20, timerInt, totalScore = 0, correctCount = 0, hasAnswered = false;
@@ -308,7 +298,6 @@
     }
 
     async function joinGame() {
-        // Fix: Loại bỏ khoảng trắng bị dư khi người chơi copy/paste mã PIN
         roomPin = document.getElementById('input-pin').value.trim();
         myName = document.getElementById('user-name').value.trim();
         if(!roomPin || !myName) return alert("Nhập đủ PIN và Tên người chơi!");
@@ -328,7 +317,6 @@
         channel = supabaseClient.channel('room_' + pin, { config: { presence: { key: myName || 'Host' } } });
         channel
         .on('presence', { event: 'sync' }, () => {
-            // Fix: Đếm chính xác số người chơi bằng cách bỏ qua mã 'Host'
             let count = 0;
             const state = channel.presenceState();
             for(let key in state) {
@@ -350,14 +338,9 @@
     }
 
     function startGameNow() {
-        // Fix: Bỏ lệnh gửi 'game_start' dư thừa để tránh xung đột tín hiệu mạng, 
-        // hàm nextQuestion() đã bao gồm lệnh mở bài thi an toàn.
         showScreen('main-layout');
-        document.getElementById('host-only-controls').style.display = 'block';
-        
-        // Mở nhạc nền khi bắt đầu
+        if(isHost) document.getElementById('host-next-btn').style.display = 'flex';
         audioBGM.play().catch(e => console.log("Trình duyệt chặn Autoplay"));
-        
         nextQuestion();
     }
 
@@ -380,22 +363,16 @@
         document.getElementById('question-text').innerText = data.q;
         document.getElementById('player-feedback').innerHTML = "";
         
-        const labels = ['▲ (A)','◆ (B)','● (C)','■ (D)'];
         for(let i=0; i<4; i++) {
+            let btn = document.getElementById('btn-' + i);
             document.getElementById('txt-' + i).innerText = data.a[i];
-            document.getElementById('btn-' + i).disabled = false;
-            document.getElementById('btn-' + i).style.opacity = "1";
-            document.getElementById('btn-' + i).style.transform = "scale(1)";
-        }
-        
-        // Host Setup: Chuẩn bị text đáp án nhưng ẨN ĐI (display: none)
-        if(isHost) {
-            document.getElementById('host-current-ans').style.display = 'none'; // Ẩn lúc đang làm bài
-            document.getElementById('correct-ans-live').innerText = labels[data.c] + " - " + data.a[data.c];
             
-            if(currentIdx > 0) {
-                document.getElementById('correct-ans-display').innerText = "[Lịch sử] Đáp án đúng câu trước: " + labels[quizData[currentIdx-1].c];
-            }
+            // Đặt lại hiệu ứng cho nút khi chuyển câu
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.transform = "scale(1)";
+            btn.style.border = "none";
+            btn.style.boxShadow = ""; 
         }
 
         audioTimeUp.pause(); audioTimeUp.currentTime = 0;
@@ -416,14 +393,22 @@
 
             if(timerVal <= 0) {
                 clearInterval(timerInt);
-                document.querySelectorAll('.ka-btn').forEach(b => b.disabled = true);
                 
-                // Hết giờ: Hiển thị đáp án cho Host
-                if(isHost) {
-                    document.getElementById('host-current-ans').style.display = 'block';
-                }
+                // Mờ đáp án sai, nổi bật đáp án đúng
+                document.querySelectorAll('.ka-btn').forEach((b, index) => {
+                    b.disabled = true;
+                    if(index === correctIdx) {
+                        b.style.opacity = "1";
+                        b.style.transform = "scale(1.05)";
+                        b.style.border = "4px solid #00ff66";
+                        b.style.boxShadow = "0 0 25px rgba(0, 255, 102, 0.8)"; 
+                    } else {
+                        b.style.opacity = "0.2";
+                        b.style.transform = "scale(0.95)";
+                        b.style.border = "none";
+                    }
+                });
 
-                // Hết giờ: Tắt nhạc nền, bật nhạc kết thúc câu hỏi
                 audioBGM.pause(); 
                 if(isHost || myName !== "") audioTimeUp.play().catch(e=>{});
             }
@@ -433,6 +418,7 @@
     async function submitAns(idx) {
         if(isHost || hasAnswered) return;
         hasAnswered = true;
+        
         document.querySelectorAll('.ka-btn').forEach(b => { 
             if(b.id !== 'btn-'+idx) {
                 b.style.opacity = "0.3"; 
@@ -443,7 +429,6 @@
         
         const fb = document.getElementById('player-feedback');
         
-        // Yêu cầu: Đúng ghi "ĐÚNG" chữ đỏ, Sai ghi "SAI" chữ đen trên nền trắng để dễ nhìn
         if(idx == correctIdx) {
             const points = 500 + (timerVal * 25);
             totalScore += points;
@@ -517,9 +502,8 @@
         showScreen('final-result-screen');
         renderLeaderboard(true); 
         
-        // Dừng nhạc cũ, bật nhạc trao giải
         audioBGM.pause(); audioTimeUp.pause();
-        audioVictory.play().catch(e=>{});
+        if(isHost || myName !== "") audioVictory.play().catch(e=>{});
 
         triggerFireworks();
 
@@ -527,17 +511,14 @@
         if(arr && arr.length > 0) {
             document.getElementById('podium-area').style.display = 'flex';
             
-            // Hạng 1
             document.getElementById('top1-name').innerText = arr[0].student_name;
             document.getElementById('top1-score').innerText = arr[0].score + " pts";
             
-            // Hạng 2
             if(arr.length > 1) {
                 document.getElementById('top2-name').innerText = arr[1].student_name;
                 document.getElementById('top2-score').innerText = arr[1].score + " pts";
             }
             
-            // Hạng 3
             if(arr.length > 2) {
                 document.getElementById('top3-name').innerText = arr[2].student_name;
                 document.getElementById('top3-score').innerText = arr[2].score + " pts";
