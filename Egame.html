@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { 
-            --ka-blue: #00f3ff; --ka-yellow: #ffde00; --ka-green: #00ff66; 
+            --ka-blue: #00f3ff; --ka-yellow: #ffde00; --ka-green: #00ff66; --ka-red: #ff3366;
             --bg-dark: #0a0b10; --panel-bg: rgba(20, 22, 35, 0.85); --glass-border: rgba(0, 243, 255, 0.3);
             --text-glow: 0 0 10px rgba(0, 243, 255, 0.8);
         }
@@ -32,37 +32,70 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 243, 255, 0.05);
         }
 
-        .game-area { flex: 3; padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;}
-        .sidebar { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+        /* 3D Digital Space cho khu vực trò chơi */
+        .game-area { 
+            flex: 3; padding: 30px; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; position: relative;
+            background: radial-gradient(ellipse at center, rgba(0,243,255,0.05) 0%, transparent 70%);
+        }
         
+        /* Bảng hiển thị câu hỏi HUD */
+        .question-board {
+            background: rgba(0, 34, 68, 0.6);
+            border: 2px solid var(--ka-blue);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3), inset 0 0 20px rgba(0, 243, 255, 0.2);
+            padding: 20px 40px;
+            border-radius: 15px;
+            width: 90%;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Hiệu ứng tia quét ngang bảng điện tử */
+        .question-board::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent);
+            animation: scanline 3s infinite linear;
+        }
+        @keyframes scanline { 0% { left: -100%; } 100% { left: 200%; } }
+
+        .sidebar { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
         .screen { display: none; width: 100%; text-align: center; }
         .active { display: flex; flex-direction: column; align-items: center; animation: fadeIn 0.5s ease-out; }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .giant-pin-card { padding: 40px; border-radius: 20px; width: 80%; max-width: 600px; text-align: center; }
         .pin-number { font-size: 6.5rem; font-weight: bold; color: var(--ka-blue); letter-spacing: 15px; margin: 20px 0; border: 2px dashed var(--ka-blue); padding: 15px; border-radius: 15px; background: rgba(0,0,0,0.5); }
 
-        .grid-kahoot { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 25px; }
+        /* Phối cảnh 3D cho vỉ chứa đáp án */
+        .grid-kahoot { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; margin-top: 15px; 
+            perspective: 1000px; /* Tạo chiều sâu không gian */
+        }
         
-        /* 3D Buttons - Màu nhạt (Pastel), chữ xanh dương đậm */
+        /* 3D Glass Buttons - Màu nhạt (Pastel), chữ xanh dương đậm */
         .ka-btn { 
-            padding: 25px 15px; border: none; border-radius: 12px; cursor: pointer; 
+            padding: 25px 15px; border: 1px solid rgba(255,255,255,0.4); border-radius: 15px; cursor: pointer; 
             font-size: 1.6rem; font-family: Arial, sans-serif; font-weight: bold; 
             color: #002244 !important; /* Xanh dương đậm */
             min-height: 120px; transition: all 0.3s ease; position: relative; top: 0; 
-            text-shadow: none; 
+            text-shadow: none; transform-style: preserve-3d;
+            backdrop-filter: blur(5px);
         }
-        .ka-btn:active:not(:disabled) { top: 6px; box-shadow: none !important; }
+        .ka-btn:active:not(:disabled) { top: 6px; box-shadow: 0 2px 0 rgba(0,0,0,0.2), inset 0 2px 5px rgba(255,255,255,0.5) !important; }
+        .ka-btn:hover:not(:disabled) { transform: translateY(-5px) scale(1.02); }
         
-        .red { background: #ffb3ba; box-shadow: 0 8px 0 #e699a0; } 
-        .blue { background: #bae1ff; box-shadow: 0 8px 0 #99cce6; } 
-        .yellow { background: #ffffba; box-shadow: 0 8px 0 #e6e699; } 
-        .green { background: #baffc9; box-shadow: 0 8px 0 #99e6aa; }
+        /* Màu nhạt Pastel + Đổ bóng không gian 3D */
+        .red { background: linear-gradient(145deg, #ffb3ba, #e699a0); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #cc8086, inset 0 2px 10px rgba(255,255,255,0.8); } 
+        .blue { background: linear-gradient(145deg, #bae1ff, #99cce6); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #80b3cc, inset 0 2px 10px rgba(255,255,255,0.8); } 
+        .yellow { background: linear-gradient(145deg, #ffffba, #e6e699); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #cccc80, inset 0 2px 10px rgba(255,255,255,0.8); } 
+        .green { background: linear-gradient(145deg, #baffc9, #99e6aa); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #80cc90, inset 0 2px 10px rgba(255,255,255,0.8); }
         
         /* Digital Timer */
         .timer-circle { 
-            width: 90px; height: 90px; border: 4px solid var(--ka-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 15px; font-weight: bold; font-family: 'Times New Roman', serif; box-shadow: 0 0 15px var(--ka-blue), inset 0 0 15px var(--ka-blue); color: var(--ka-blue); text-shadow: var(--text-glow);
+            width: 90px; height: 90px; border: 4px solid var(--ka-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 25px; font-weight: bold; font-family: 'Times New Roman', serif; box-shadow: 0 0 15px var(--ka-blue), inset 0 0 15px var(--ka-blue); color: var(--ka-blue); text-shadow: var(--text-glow); background: rgba(0,0,0,0.4);
         }
         
         .rank-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.3rem; }
@@ -81,17 +114,21 @@
         }
         .btn-3d:active { transform: translateY(6px); box-shadow: none; }
 
-        /* Nút Câu Tiếp Theo gọn ở góc (Chỉ Host thấy) */
+        /* Nút Câu Tiếp Theo (Cyber Ring) - Chỉ Host thấy */
         .next-btn {
-            position: absolute; bottom: 25px; right: 25px;
-            background: linear-gradient(145deg, #ffde00, #cca300); color: #000;
-            border: none; border-radius: 50%; width: 65px; height: 65px;
-            font-size: 2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 6px 0 #997a00, 0 10px 20px rgba(0,0,0,0.5); transition: 0.2s; z-index: 10;
+            position: absolute; bottom: 30px; right: 30px;
+            background: rgba(0, 243, 255, 0.1); color: var(--ka-blue);
+            border: 2px solid var(--ka-blue); border-radius: 50%; width: 75px; height: 75px;
+            font-size: 2.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4), inset 0 0 10px rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(5px); transition: all 0.3s ease; z-index: 10;
         }
-        .next-btn:active { transform: translateY(6px); box-shadow: none; }
+        .next-btn:hover {
+            background: var(--ka-blue); color: #000;
+            box-shadow: 0 0 30px var(--ka-blue); transform: scale(1.1);
+        }
+        .next-btn:active { transform: scale(0.95); }
 
-        /* Nút Audio Floating */
         .audio-btn {
             position: fixed; bottom: 25px; right: 25px; background: rgba(0,243,255,0.2); 
             border: 1px solid var(--ka-blue); color: white; border-radius: 50%; 
@@ -101,54 +138,40 @@
         }
         .audio-btn:hover { background: rgba(0,243,255,0.4); transform: scale(1.1); }
 
-        /* Podium 3D Không gian có chiều sâu */
+        /* Podium 3D */
         .podium-stage {
             display: flex; justify-content: center; align-items: flex-end;
             gap: 20px; height: 350px; margin: 50px auto; width: 80%;
-            perspective: 1000px;
-            position: relative;
+            perspective: 1000px; position: relative;
         }
-        
         .podium-stage::before {
             content: ''; position: absolute; bottom: -30px; left: -10%; right: -10%; height: 100px;
             background: radial-gradient(ellipse at center, rgba(0,243,255,0.3) 0%, transparent 70%);
             transform: rotateX(70deg); z-index: 0;
         }
-
         .podium-step {
             display: flex; flex-direction: column; align-items: center; width: 150px;
-            transform-style: preserve-3d;
-            transform: rotateX(15deg);
-            z-index: 1;
+            transform-style: preserve-3d; transform: rotateX(15deg); z-index: 1;
         }
-
         .podium-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; text-shadow: 0 0 10px #fff; text-align: center; white-space: nowrap; transform: translateZ(20px); }
         .podium-score { font-size: 1.2rem; color: var(--ka-yellow); margin-bottom: 15px; transform: translateZ(20px); }
-        
         .step-block { 
             width: 100%; display: flex; align-items: center; justify-content: center; 
             font-size: 4rem; font-family: 'Times New Roman', serif; font-weight: bold; color: rgba(0,0,0,0.6); 
-            position: relative;
-            box-shadow: 0 20px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.3);
+            position: relative; box-shadow: 0 20px 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.3);
         }
-        
         .step-block::before {
             content: ''; position: absolute; top: -30px; left: 0; width: 100%; height: 30px;
-            background: inherit; filter: brightness(1.3);
-            transform-origin: bottom; transform: rotateX(70deg);
+            background: inherit; filter: brightness(1.3); transform-origin: bottom; transform: rotateX(70deg);
             border-top: 1px solid rgba(255,255,255,0.8);
         }
-        
         .step-block::after {
             content: ''; position: absolute; top: 0; right: -20px; width: 20px; height: 100%;
-            background: inherit; filter: brightness(0.7);
-            transform-origin: left; transform: rotateY(70deg);
+            background: inherit; filter: brightness(0.7); transform-origin: left; transform: rotateY(70deg);
         }
-
         .step-1 { height: 200px; background: linear-gradient(180deg, #ffde00, #b39b00); }
         .step-2 { height: 140px; background: linear-gradient(180deg, #e0e0e0, #808080); }
         .step-3 { height: 90px; background: linear-gradient(180deg, #cd7f32, #8b5a2b); }
-
     </style>
 </head>
 <body>
@@ -164,14 +187,14 @@
                 <p style="margin-top:0; color: var(--ka-green); font-size: 1.2rem;"><b>GIẢNG VIÊN</b></p>
                 <input type="text" id="class-name" placeholder="Tên lớp..." style="width:94%; padding:12px; margin-bottom:15px;">
                 <input type="file" id="upload-excel" accept=".xlsx" style="width:94%; margin-bottom:20px; padding: 10px;">
-                <button class="btn-3d" onclick="createRoom()" style="width:100%;">MỞ PHÒNG HỌC</button>
+                <button class="btn-3d" onclick="createRoom()" style="width:100%;">TẠO MÃ PIN</button>
             </div>
             <hr style="margin: 25px 0; border-color: rgba(255,255,255,0.1);">
             <div id="player-part" style="text-align: left; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
                 <p style="margin-top:0; color: var(--ka-yellow); font-size: 1.2rem;"><b>NGƯỜI CHƠI</b></p>
                 <input type="text" id="input-pin" placeholder="Mã PIN..." style="width:94%; padding:12px; margin-bottom:15px;">
                 <input type="text" id="user-name" placeholder="Họ và tên..." style="width:94%; padding:12px; margin-bottom:20px;">
-                <button class="btn-3d" onclick="joinGame()" style="width:100%; background: linear-gradient(145deg, #33ff85, #00cc44); box-shadow: 0 6px 0 #009933;">VÀO THI</button>
+                <button id="join-btn" class="btn-3d" onclick="joinGame()" style="width:100%; background: linear-gradient(145deg, #33ff85, #00cc44); box-shadow: 0 6px 0 #009933;">VÀO THI</button>
             </div>
             
             <div style="margin-top: 25px; font-size: 1rem; color: #888; font-weight: bold; letter-spacing: 1px;">
@@ -194,7 +217,11 @@
         <div class="main-layout">
             <div class="glass-panel game-area">
                 <div class="timer-circle" id="timer">20</div>
-                <h2 id="question-text" style="font-size: 2.2rem; text-align: center; text-shadow: 2px 2px 4px #000;">Đang tải câu hỏi...</h2>
+                
+                <div class="question-board">
+                    <h2 id="question-text" style="font-size: 2.2rem; margin: 0; text-shadow: 2px 2px 4px #000;">Đang tải câu hỏi...</h2>
+                </div>
+
                 <div class="grid-kahoot" id="ans-buttons">
                     <button class="ka-btn red" id="btn-0" onclick="submitAns(0)">▲ <span id="txt-0"></span></button>
                     <button class="ka-btn blue" id="btn-1" onclick="submitAns(1)">◆ <span id="txt-1"></span></button>
@@ -302,6 +329,11 @@
         myName = document.getElementById('user-name').value.trim();
         if(!roomPin || !myName) return alert("Nhập đủ PIN và Tên người chơi!");
         
+        // Ngăn chặn bấm nhiều lần gây lag
+        let btn = document.getElementById('join-btn');
+        btn.disabled = true;
+        btn.innerText = "ĐANG VÀO...";
+
         liveScores[myName] = 0; 
         liveCorrects[myName] = 0;
         document.getElementById('my-stats').style.display = 'block';
@@ -311,10 +343,17 @@
         document.getElementById('display-pin').innerText = roomPin;
         document.getElementById('lobby-class-name').innerText = "ĐANG CHỜ GIẢNG VIÊN MỞ BÀI THI...";
         initChannel(roomPin);
+        
+        // Khôi phục nút bấm sau 2 giây (đề phòng ấn lại)
+        setTimeout(() => { btn.disabled = false; btn.innerText = "VÀO THI"; }, 2000);
     }
 
     function initChannel(pin) {
+        // [FIX QUAN TRỌNG]: Hủy toàn bộ sóng cũ trước khi mở sóng mới để tránh học viên bị kẹt mạng do gửi/nhận trùng lặp
+        supabaseClient.removeAllChannels();
+
         channel = supabaseClient.channel('room_' + pin, { config: { presence: { key: myName || 'Host' } } });
+        
         channel
         .on('presence', { event: 'sync' }, () => {
             let count = 0;
@@ -332,8 +371,11 @@
             renderLeaderboard();
         })
         .on('broadcast', { event: 'game_finish' }, () => showFinalResult())
-        .subscribe(async (s) => {
-            if (s === 'SUBSCRIBED') await channel.track({ online_at: new Date().toISOString() });
+        .subscribe(async (status) => {
+            // Chỉ cập nhật trạng thái online khi mạng thực sự thông suốt
+            if (status === 'SUBSCRIBED') {
+                await channel.track({ online_at: new Date().toISOString() });
+            }
         });
     }
 
@@ -367,12 +409,17 @@
             let btn = document.getElementById('btn-' + i);
             document.getElementById('txt-' + i).innerText = data.a[i];
             
-            // Đặt lại hiệu ứng cho nút khi chuyển câu
+            // Đặt lại hiệu ứng ban đầu cho các nút
             btn.disabled = false;
             btn.style.opacity = "1";
             btn.style.transform = "scale(1)";
-            btn.style.border = "none";
-            btn.style.boxShadow = ""; 
+            btn.style.border = "1px solid rgba(255,255,255,0.4)";
+            
+            // Phục hồi lại đổ bóng đáy cho khối 3D tùy theo màu
+            if (btn.classList.contains('red')) btn.style.boxShadow = "0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #cc8086, inset 0 2px 10px rgba(255,255,255,0.8)";
+            if (btn.classList.contains('blue')) btn.style.boxShadow = "0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #80b3cc, inset 0 2px 10px rgba(255,255,255,0.8)";
+            if (btn.classList.contains('yellow')) btn.style.boxShadow = "0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #cccc80, inset 0 2px 10px rgba(255,255,255,0.8)";
+            if (btn.classList.contains('green')) btn.style.boxShadow = "0 10px 20px rgba(0,0,0,0.4), 0 8px 0 #80cc90, inset 0 2px 10px rgba(255,255,255,0.8)";
         }
 
         audioTimeUp.pause(); audioTimeUp.currentTime = 0;
@@ -394,18 +441,19 @@
             if(timerVal <= 0) {
                 clearInterval(timerInt);
                 
-                // Mờ đáp án sai, nổi bật đáp án đúng
+                // Hết giờ: Mờ đáp án sai, sáng đáp án đúng cho cả Giảng viên và Học viên
                 document.querySelectorAll('.ka-btn').forEach((b, index) => {
                     b.disabled = true;
                     if(index === correctIdx) {
                         b.style.opacity = "1";
                         b.style.transform = "scale(1.05)";
                         b.style.border = "4px solid #00ff66";
-                        b.style.boxShadow = "0 0 25px rgba(0, 255, 102, 0.8)"; 
+                        b.style.boxShadow = "0 0 30px rgba(0, 255, 102, 0.8)"; 
                     } else {
                         b.style.opacity = "0.2";
                         b.style.transform = "scale(0.95)";
                         b.style.border = "none";
+                        b.style.boxShadow = "none";
                     }
                 });
 
@@ -423,6 +471,7 @@
             if(b.id !== 'btn-'+idx) {
                 b.style.opacity = "0.3"; 
                 b.style.transform = "scale(0.95)";
+                b.style.boxShadow = "none";
             }
             b.disabled = true; 
         });
