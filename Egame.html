@@ -2,78 +2,79 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Egame Pro - TS. Cao Thanh Hùng</title>
+    <title>Egame Pro v3 - TS. Cao Thanh Hùng</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
         :root { --ka-red: #e21b3c; --ka-blue: #1368ce; --ka-yellow: #d89e00; --ka-green: #26890c; --bg: #46178f; }
-        body { font-family: 'Segoe UI', Arial; background: var(--bg); color: white; margin: 0; text-align: center; }
-        .container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .card { background: white; color: #333; padding: 30px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .screen { display: none; width: 100%; }
-        .active { display: block; }
+        body { font-family: 'Segoe UI', Arial; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        .container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .main-layout { display: flex; width: 95%; max-width: 1200px; gap: 20px; height: 80vh; }
         
-        /* Giao diện nút màu sắc tích hợp Text */
-        .grid-kahoot { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 95%; max-width: 900px; margin: 20px auto; }
-        .ka-btn { padding: 30px 15px; border: none; border-radius: 10px; cursor: pointer; font-size: 1.2rem; color: white; font-weight: bold; transition: 0.2s; min-height: 120px; display: flex; align-items: center; justify-content: center; }
-        .ka-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .red { background: var(--ka-red); } .blue { background: var(--ka-blue); }
-        .yellow { background: var(--ka-yellow); } .green { background: var(--ka-green); }
+        /* Cột trái: Nội dung chính */
+        .game-area { flex: 3; background: rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         
-        .timer-circle { width: 70px; height: 70px; border: 4px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 20px; font-weight: bold; }
-        .pin-display { font-size: 3rem; font-weight: bold; background: white; color: black; padding: 10px 40px; border-radius: 10px; margin: 20px 0; display: inline-block; }
-        .leaderboard { background: white; color: #333; border-radius: 10px; padding: 20px; max-width: 600px; margin: 20px auto; text-align: left; }
-        .row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 1.2rem; }
+        /* Cột phải: Bảng điểm cố định */
+        .sidebar { flex: 1; background: white; color: #333; border-radius: 15px; padding: 15px; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        
+        .screen { display: none; width: 100%; text-align: center; }
+        .active { display: flex; flex-direction: column; align-items: center; }
+        
+        .grid-kahoot { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 20px; }
+        .ka-btn { padding: 25px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1rem; color: white; font-weight: bold; min-height: 100px; }
+        .red { background: var(--ka-red); } .blue { background: var(--ka-blue); } .yellow { background: var(--ka-yellow); } .green { background: var(--ka-green); }
+        
+        .timer-circle { width: 60px; height: 60px; border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 10px; }
+        .rank-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .host-controls { margin-top: 20px; background: white; padding: 15px; border-radius: 10px; color: #333; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="host-setup" class="screen active">
-        <div class="card">
-            <h1>Egame Setup</h1>
-            <input type="text" id="class-name" placeholder="Tên lớp (VD: Lý luận 1)..." style="padding:12px; width:80%; margin-bottom:10px;">
-            <input type="file" id="upload-excel" accept=".xlsx">
-            <br><br>
-            <button onclick="createRoom()" style="background:var(--bg); color:white; padding:15px 30px; border:none; border-radius:8px; cursor:pointer; width:100%;">TẠO PHÒNG CHƠI</button>
+<div class="container" id="main-container">
+    <div id="setup-screen" class="screen active">
+        <div style="background: white; color: #333; padding: 30px; border-radius: 15px; width: 400px;">
+            <h1 style="color:var(--bg)">Egame v3</h1>
+            <div id="host-part">
+                <p><b>Giảng viên:</b></p>
+                <input type="text" id="class-name" placeholder="Tên lớp..." style="width:90%; padding:10px; margin-bottom:10px;">
+                <input type="file" id="upload-excel" accept=".xlsx" style="font-size: 0.8rem;">
+                <button onclick="createRoom()" style="background:var(--bg); color:white; width:100%; padding:12px; margin-top:10px; border:none; border-radius:5px; cursor:pointer;">MỞ PHÒNG HỌC</button>
+            </div>
+            <hr style="margin: 20px 0;">
+            <div id="player-part">
+                <p><b>Sinh viên:</b></p>
+                <input type="text" id="input-pin" placeholder="Mã PIN..." style="width:90%; padding:10px; margin-bottom:10px;">
+                <input type="text" id="user-name" placeholder="Tên SV..." style="width:90%; padding:10px; margin-bottom:10px;">
+                <button onclick="joinGame()" style="background:#26890c; color:white; width:100%; padding:12px; border:none; border-radius:5px; cursor:pointer;">THAM GIA</button>
+            </div>
         </div>
-        <p>Sinh viên bấm: <button onclick="showScreen('join-screen')" style="background:none; border:1px solid white; color:white; padding:5px 10px; cursor:pointer;">Nhập PIN</button></p>
     </div>
 
-    <div id="join-screen" class="screen">
-        <div class="card">
-            <h1>Nhập mã PIN</h1>
-            <input type="text" id="input-pin" placeholder="Mã PIN 6 số..." style="padding:12px; width:80%; margin-bottom:10px;">
-            <input type="text" id="user-name" placeholder="Họ và tên..." style="padding:12px; width:80%; margin-bottom:10px;">
-            <button onclick="joinGame()" style="background:#26890c; color:white; padding:15px; border:none; border-radius:8px; width:100%;">THAM GIA</button>
+    <div id="main-layout" class="screen" style="width:100%;">
+        <div class="main-layout">
+            <div class="game-area">
+                <div class="timer-circle" id="timer">20</div>
+                <h2 id="question-text">Đang chờ câu hỏi...</h2>
+                <div class="grid-kahoot" id="ans-buttons">
+                    <button class="ka-btn red" id="btn-0" onclick="submitAns(0)">▲ <span id="txt-0"></span></button>
+                    <button class="ka-btn blue" id="btn-1" onclick="submitAns(1)">◆ <span id="txt-1"></span></button>
+                    <button class="ka-btn yellow" id="btn-2" onclick="submitAns(2)">● <span id="txt-2"></span></button>
+                    <button class="ka-btn green" id="btn-3" onclick="submitAns(3)">■ <span id="txt-3"></span></button>
+                </div>
+                
+                <div id="host-only-controls" class="host-controls" style="display:none;">
+                    <p id="correct-ans-display">Đáp án đúng: ...</p>
+                    <button onclick="nextQuestion()" style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; font-weight:bold;">CÂU TIẾP THEO >>></button>
+                </div>
+                <div id="player-feedback" style="margin-top:15px; font-weight:bold; font-size:1.2rem;"></div>
+            </div>
+
+            <div class="sidebar">
+                <h3 style="margin-top:0; border-bottom: 2px solid var(--bg); padding-bottom:10px;">BẢNG ĐIỂM LỚP</h3>
+                <div id="live-rank"></div>
+            </div>
         </div>
-    </div>
-
-    <div id="lobby-screen" class="screen">
-        <h2 id="display-class-name">PHÒNG CHỜ</h2>
-        <div class="pin-display" id="display-pin">000000</div>
-        <div id="player-count">Sinh viên: 0</div>
-        <br>
-        <button id="start-btn" onclick="startGame()" style="display:none; background:white; color:var(--bg); padding:15px 50px; font-weight:bold; border:none; border-radius:5px; cursor:pointer;">BẮT ĐẦU</button>
-    </div>
-
-    <div id="game-screen" class="screen">
-        <div class="timer-circle" id="timer">20</div>
-        <h2 id="question-text" style="padding: 0 20px;">Câu hỏi</h2>
-        <div class="grid-kahoot" id="ans-container">
-            <button class="ka-btn red" onclick="submitAns(0)">▲ <span id="text-0"></span></button>
-            <button class="ka-btn blue" onclick="submitAns(1)">◆ <span id="text-1"></span></button>
-            <button class="ka-btn yellow" onclick="submitAns(2)">● <span id="text-2"></span></button>
-            <button class="ka-btn green" onclick="submitAns(3)">■ <span id="text-3"></span></button>
-        </div>
-        <p id="feedback" style="font-weight:bold; font-size:1.5rem; margin-top:20px;"></p>
-    </div>
-
-    <div id="result-screen" class="screen">
-        <h1>BẢNG VÀNG THÀNH TÍCH</h1>
-        <div id="leaderboard" class="leaderboard"></div>
-        <br>
-        <button onclick="location.reload()" style="background:white; color:var(--bg); padding:10px 30px; border:none; border-radius:5px; cursor:pointer;">KẾT THÚC TIẾT HỌC</button>
     </div>
 </div>
 
@@ -83,126 +84,136 @@
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     let isHost = false, myName = "", roomPin = "", quizData = [], channel;
-    let currentIdx = 0, currentCorrect = -1, timerValue = 20, timerInt, totalScore = 0;
+    let currentIdx = -1, correctIdx = -1, timerVal = 20, timerInt, totalScore = 0, hasAnswered = false;
 
-    // GIẢNG VIÊN NẠP FILE
+    // ĐỌC EXCEL
     document.getElementById('upload-excel').onchange = (e) => {
         const reader = new FileReader();
         reader.onload = (evt) => {
             const data = XLSX.utils.sheet_to_json(XLSX.read(evt.target.result, {type:'binary'}).Sheets[XLSX.read(evt.target.result, {type:'binary'}).SheetNames[0]], {header:1});
             quizData = data.slice(1).map(r => ({ q: r[0], a: [r[1], r[2], r[3], r[4]], c: r[5] }));
-            alert("Đã nạp " + quizData.length + " câu hỏi!");
         };
         reader.readAsBinaryString(e.target.files[0]);
     };
 
+    // TẠO PHÒNG (GIẢNG VIÊN)
     async function createRoom() {
+        const cName = document.getElementById('class-name').value;
+        if(!cName || quizData.length === 0) return alert("Thiếu tên lớp hoặc file Excel!");
         roomPin = Math.floor(100000 + Math.random() * 900000).toString();
         isHost = true;
-        document.getElementById('display-pin').innerText = roomPin;
-        document.getElementById('display-class-name').innerText = "LỚP: " + document.getElementById('class-name').value;
-        document.getElementById('start-btn').style.display = 'inline-block';
-        showScreen('lobby-screen');
-        connectRealtime(roomPin);
+        document.getElementById('host-only-controls').style.display = 'block';
+        alert("Mã PIN của anh là: " + roomPin);
+        initGame(roomPin);
     }
 
+    // THAM GIA (SINH VIÊN)
     async function joinGame() {
         roomPin = document.getElementById('input-pin').value;
         myName = document.getElementById('user-name').value;
         if(!roomPin || !myName) return alert("Nhập đủ PIN và Tên!");
-        showScreen('lobby-screen');
-        connectRealtime(roomPin);
+        initGame(roomPin);
     }
 
-    function connectRealtime(pin) {
-        channel = supabaseClient.channel('room_' + pin, { config: { presence: { key: myName || 'Host' } } });
+    function initGame(pin) {
+        showScreen('main-layout');
+        channel = supabaseClient.channel('room_' + pin);
         channel
-        .on('presence', { event: 'sync' }, () => {
-            const state = channel.presenceState();
-            document.getElementById('player-count').innerText = `Sinh viên sẵn sàng: ${Object.keys(state).length - (isHost?1:0)}`;
+        .on('broadcast', { event: 'game_update' }, (payload) => {
+            updateGameUI(payload.payload);
         })
-        .on('broadcast', { event: 'next_q' }, (payload) => {
-            if(!isHost) startQuestion(payload.payload);
-        })
-        .subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') await channel.track({ online_at: new Date().toISOString() });
+        .subscribe(() => {
+            if(isHost) nextQuestion(); // Câu đầu tiên
+            loadLeaderboard();
         });
-    }
-
-    function startGame() { sendNext(0); }
-
-    function sendNext(idx) {
-        channel.send({ type: 'broadcast', event: 'next_q', payload: { q: quizData[idx], idx: idx, total: quizData.length } });
-        startQuestion({ q: quizData[idx], idx: idx, total: quizData.length });
-    }
-
-    function startQuestion(data) {
-        showScreen('game-screen');
-        document.getElementById('question-text').innerText = data.q.q;
-        document.getElementById('feedback').innerText = "";
-        currentCorrect = data.q.c;
         
-        // Hiện Text vào các nút
+        // Theo dõi bảng điểm liên tục
+        setInterval(loadLeaderboard, 3000);
+    }
+
+    // ĐIỀU KHIỂN CHUYỂN CÂU (CHỈ GIẢNG VIÊN)
+    function nextQuestion() {
+        currentIdx++;
+        if(currentIdx >= quizData.length) {
+            alert("Đã hết bộ câu hỏi!");
+            return;
+        }
+        const data = {
+            q: quizData[currentIdx].q,
+            a: quizData[currentIdx].a,
+            c: quizData[currentIdx].c,
+            idx: currentIdx
+        };
+        channel.send({ type: 'broadcast', event: 'game_update', payload: data });
+        updateGameUI(data);
+    }
+
+    // CẬP NHẬT GIAO DIỆN KHI NHẬN LỆNH TỪ HOST
+    function updateGameUI(data) {
+        hasAnswered = false;
+        correctIdx = data.c;
+        document.getElementById('question-text').innerText = data.q;
+        document.getElementById('player-feedback').innerText = "";
+        
+        // Hiện đáp án vào nút
         for(let i=0; i<4; i++) {
-            document.getElementById('text-' + i).innerText = data.q.a[i];
-            document.querySelectorAll('.ka-btn')[i].disabled = false;
+            document.getElementById('txt-' + i).innerText = data.a[i];
+            document.getElementById('btn-' + i).disabled = false;
         }
 
-        timerValue = 20;
-        document.getElementById('timer').innerText = timerValue;
+        if(isHost) {
+            const labels = ['A','B','C','D'];
+            document.getElementById('correct-ans-display').innerText = "Đáp án đúng: " + labels[data.c];
+        }
+
+        // Chạy đồng hồ
+        timerVal = 20;
+        document.getElementById('timer').innerText = timerVal;
         clearInterval(timerInt);
         timerInt = setInterval(() => {
-            timerValue--;
-            document.getElementById('timer').innerText = timerValue;
-            if(timerValue <= 0) {
+            timerVal--;
+            document.getElementById('timer').innerText = timerVal;
+            if(timerVal <= 0) {
                 clearInterval(timerInt);
-                lockButtons();
-                if(isHost) {
-                    setTimeout(() => {
-                        if(data.idx + 1 < data.total) sendNext(data.idx + 1);
-                        else finishGame();
-                    }, 4000);
-                }
+                document.querySelectorAll('.ka-btn').forEach(b => b.disabled = true);
             }
         }, 1000);
     }
 
+    // SINH VIÊN TRẢ LỜI
     async function submitAns(idx) {
-        lockButtons();
-        clearInterval(timerInt);
-        const fb = document.getElementById('feedback');
+        if(isHost || hasAnswered) return;
+        hasAnswered = true;
+        document.querySelectorAll('.ka-btn').forEach(b => b.disabled = true);
         
-        if(idx == currentCorrect) {
-            // TÍNH ĐIỂM: 500 điểm cơ bản + (số giây còn lại * 25)
-            const bonus = timerValue * 25;
-            const points = 500 + bonus;
+        const fb = document.getElementById('player-feedback');
+        if(idx == correctIdx) {
+            const points = 500 + (timerVal * 25);
             totalScore += points;
             fb.innerHTML = `<span style="color:#2ecc71">CHÍNH XÁC! +${points}đ</span>`;
-            // Cập nhật lên Supabase
             await supabaseClient.from('leaderboard').upsert({ student_name: myName, score: totalScore }, { onConflict: 'student_name' });
         } else {
             fb.innerHTML = `<span style="color:#e21b3c">SAI RỒI!</span>`;
         }
+        loadLeaderboard();
     }
 
-    function lockButtons() {
-        document.querySelectorAll('.ka-btn').forEach(b => b.disabled = true);
-    }
-
-    async function finishGame() {
-        showScreen('result-screen');
-        const { data } = await supabaseClient.from('leaderboard').select('*').order('score', { ascending: false }).limit(10);
-        document.getElementById('leaderboard').innerHTML = data.map((p, i) => `
-            <div class="row">
-                <span><b>${i + 1}. ${p.student_name}</b></span>
-                <span style="color:var(--ka-blue)">${p.score} điểm</span>
-            </div>
-        `).join('');
+    // TẢI BẢNG ĐIỂM (HIỂN THỊ Ở CỘT CỐ ĐỊNH)
+    async function loadLeaderboard() {
+        const { data } = await supabaseClient.from('leaderboard').select('*').order('score', { ascending: false }).limit(15);
+        if(data) {
+            document.getElementById('live-rank').innerHTML = data.map((p, i) => `
+                <div class="rank-item">
+                    <span>${i+1}. ${p.student_name}</span>
+                    <span style="font-weight:bold; color:var(--ka-blue)">${p.score}</span>
+                </div>
+            `).join('');
+        }
     }
 
     function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+        document.getElementById('setup-screen').classList.remove('active');
+        document.getElementById('main-layout').classList.add('active');
     }
 </script>
 </body>
