@@ -165,7 +165,7 @@
         // --- 4. CÁC HÀM XỬ LÝ DỮ LIỆU ---
 
         function addNewCategory() {
-            const newCat = prompt("Nhập tên Tập hồ sơ mới (VD: TẬP 9 - KIỂM TRA):");
+            const newCat = prompt("Nhập tên Tập hồ sơ mới (VD:  TẬP 9 - KIỂM TRA):");
             if (newCat && newCat.trim() !== "") {
                 categories.push(newCat.trim().toUpperCase());
                 localStorage.setItem('my_categories', JSON.stringify(categories));
