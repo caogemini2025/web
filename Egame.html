@@ -533,7 +533,7 @@
             const points = 500 + (timerVal * 25);
             totalScore += points;
             correctCount++; 
-            fb.innerHTML = `<span style="color: #00cc44; background: white; padding: 5px 30px; border-radius: 12px; border: 4px solid #00cc44; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">CHÍNH XÁC +${points}</span>`;
+            fb.innerHTML = `<span style="color: #00cc44; background: white; padding: 5px 30px; border-radius: 12px; border: 4px solid #00cc44; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">ĐÚNG +${points}</span>`;
             document.getElementById('stat-score').innerText = totalScore;
             
             liveScores[myName] = totalScore;
@@ -543,7 +543,7 @@
             
             supabaseClient.from('leaderboard').upsert({ student_name: myName, score: totalScore }, { onConflict: 'student_name' }).then().catch(e=>{});
         } else { 
-            fb.innerHTML = `<span style="color: #ff3366; background: white; padding: 5px 30px; border-radius: 12px; border: 4px solid #ff3366; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">SAI RỒI</span>`; 
+            fb.innerHTML = `<span style="color: #ff3366; background: white; padding: 5px 30px; border-radius: 12px; border: 4px solid #ff3366; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">SAI</span>`; 
         }
     }
 
