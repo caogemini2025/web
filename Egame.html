@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Egame - V2.0 Pro - TS. Cao Thanh Hùng</title>
+    <title>Egame - V1</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -200,7 +200,7 @@
             <h1 style="color:var(--ka-blue); margin-top:0; text-shadow: var(--text-glow); font-size: 2.8rem; letter-spacing: 2px;">EGAME V2.0 PRO</h1>
             
             <div id="host-part" style="text-align: left; background: rgba(0,0,0,0.4); padding: 25px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); margin-top: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                <p style="margin-top:0; color: var(--ka-green); font-size: 1.3rem; border-bottom: 1px solid rgba(0,255,102,0.3); padding-bottom: 10px;"><b>KHOẢNG DÀNH CHO GIẢNG VIÊN</b></p>
+                <p style="margin-top:0; color: var(--ka-green); font-size: 1.3rem; border-bottom: 1px solid rgba(0,255,102,0.3); padding-bottom: 10px;"><b>GIẢNG VIÊN</b></p>
                 <input type="text" id="class-name" placeholder="Nhập tên lớp học..." style="width:94%; padding:14px; margin-bottom:15px;">
                 
                 <!-- Bổ sung chọn Theme -->
@@ -212,7 +212,7 @@
                 </select>
 
                 <input type="file" id="upload-excel" accept=".xlsx" style="width:94%; margin-bottom:20px; padding: 12px;">
-                <button class="btn-3d" onclick="createRoom()" style="width:100%;">TẠO PHÒNG & MÃ PIN</button>
+                <button class="btn-3d" onclick="createRoom()" style="width:100%;">TẠO PHÒNG VÀ MÃ PIN</button>
             </div>
 
             <hr style="margin: 30px 0; border-color: rgba(255,255,255,0.1);">
@@ -233,7 +233,7 @@
     <div id="lobby-screen" class="screen">
         <div class="glass-panel giant-pin-card">
             <h2 id="lobby-class-name" style="margin:0; color:var(--ka-blue); font-size: 2.5rem;">LỚP ĐANG CHỜ...</h2>
-            <div class="pin-number" id="display-pin">000000</div>
+            <div class="pin-number" id="display-pin">000</div>
             <div id="player-count" style="font-size: 2.5rem; font-weight: bold; color: var(--ka-green); font-family: 'Times New Roman', serif; text-shadow: 0 0 15px var(--ka-green);">0 NGƯỜI CHƠI ONLINE</div>
             <br><br>
             <button id="start-btn" class="btn-3d" onclick="startGameNow()" style="padding:25px 80px; font-size:2rem; display:none; background: linear-gradient(145deg, #ffde00, #ff9900); box-shadow: 0 8px 0 #cc7a00, 0 15px 20px rgba(0,0,0,0.5);">BẮT ĐẦU TRÒ CHƠI</button>
@@ -350,7 +350,7 @@
     async function createRoom() {
         const cName = document.getElementById('class-name').value;
         if(!cName || quizData.length === 0) return alert("Vui lòng nhập tên lớp và nạp file Excel!");
-        roomPin = Math.floor(100000 + Math.random() * 900000).toString();
+        roomPin = Math.floor(001 + Math.random() * 999).toString();
         isHost = true;
         
         // Cập nhật Theme do Host chọn
